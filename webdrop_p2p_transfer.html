@@ -229,11 +229,11 @@
     </main>
 
     <script type="module">
-        // Import Firebase for Real-time Radar capabilities (Auth module removed for ease of setup)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Import correct version based on user setup
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-        const CHUNK_SIZE = 256 * 1024; // 256KB for robust transferring
+        const CHUNK_SIZE = 256 * 1024; // 256KB chunks
         
         let peer = null;
         let activeConn = null;
@@ -244,8 +244,6 @@
         let fileQueue = [];
         let isTransferring = false;
         let transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null };
-
-        // Firebase / Radar instances
         let db;
 
         function getDeviceName() {
@@ -260,7 +258,6 @@
 
         async function initRadarService(pin) {
             try {
-                // USER'S PROVIDED FIREBASE CONFIGURATION
                 const config = {
                     apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
                     authDomain: "webdrop-ca210.firebaseapp.com",
@@ -271,20 +268,18 @@
                     measurementId: "G-0K60F2FQS7"
                 };
                 
-                const appId = 'webdrop-ca210';
-
                 const app = initializeApp(config);
                 db = getFirestore(app);
 
-                // Fetch Public IP for room matching
-                let myIp = 'unknown';
+                // Fetch Public IP
+                let myIp = 'local_fallback';
                 try {
                     const res = await fetch('https://api.ipify.org?format=json');
                     myIp = (await res.json()).ip;
-                } catch(e) {}
+                } catch(e) { console.warn("IP fetch blocked, using fallback", e); }
 
-                // Register device presence (Using test mode rules, so no login needed)
-                const presenceRef = doc(db, 'artifacts', appId, 'public', 'data', 'radar_devices', pin);
+                // Register device - simplified path to avoid complex rule issues
+                const presenceRef = doc(db, 'radar_devices', pin);
                 await setDoc(presenceRef, {
                     peerId: pin,
                     ip: myIp,
@@ -294,12 +289,11 @@
 
                 window.addEventListener('beforeunload', () => deleteDoc(presenceRef));
 
-                // Listen for other devices on the same IP
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'radar_devices');
+                const colRef = collection(db, 'radar_devices');
                 onSnapshot(colRef, (snapshot) => {
                     const peers = [];
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
+                    snapshot.forEach(document => {
+                        const data = document.data();
                         if (data.ip === myIp && data.peerId !== pin) {
                             if (Date.now() - data.timestamp < 300000) {
                                 peers.push(data);
@@ -307,11 +301,16 @@
                         }
                     });
                     renderRadarUI(peers);
-                }, (err) => console.error(err));
+                }, (err) => {
+                    console.error("Firestore Listen Error:", err);
+                    document.getElementById('radar-status-text').innerText = 'Radar DB Error: ' + err.code;
+                    document.getElementById('radar-status-text').classList.add('text-red-400');
+                });
 
             } catch (err) {
-                console.warn("Radar init failed:", err);
-                document.getElementById('radar-status-text').innerText = 'Radar Offline (Manual PIN Only)';
+                console.error("Radar Init Error:", err);
+                document.getElementById('radar-status-text').innerText = 'Radar Failed: ' + (err.code || err.message).substring(0, 30);
+                document.getElementById('radar-status-text').classList.add('text-red-400');
             }
         }
 
@@ -319,6 +318,7 @@
             const container = document.getElementById('radar-devices-container');
             const statusEl = document.getElementById('radar-status-text');
             container.innerHTML = '';
+            statusEl.classList.remove('text-red-400');
             
             if(peers.length === 0) {
                 statusEl.innerText = 'Radar Scanning...';
@@ -334,7 +334,7 @@
                 const y = Math.sin(angle) * radius;
                 
                 const btn = document.createElement('button');
-                btn.className = 'absolute bg-black/40 hover:bg-blue-600/50 border border-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center justify-center transition-all hover:scale-110 z-20 shadow-lg';
+                btn.className = 'absolute bg-black/40 hover:bg-blue-600/50 border border-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center justify-center transition-all hover:scale-110 z-20 shadow-lg fade-in';
                 btn.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
                 btn.style.top = '50%';
                 btn.style.left = '50%';
@@ -359,7 +359,7 @@
             myPin = Math.floor(10000 + Math.random() * 90000).toString();
             document.getElementById('my-id-display').innerText = myPin;
 
-            initRadarService(myPin); // Boot up real-time discovery
+            initRadarService(myPin); 
 
             peer = new Peer(myPin, {
                 debug: 2,
@@ -424,7 +424,7 @@
             const targetPin = document.getElementById('target-id-input').value.trim();
             if (targetPin.length !== 5) return;
             
-            updateAppStatus('connecting', 'Negotiating Handshake...');
+            updateAppStatus('connecting', 'Negotiating...');
             const connection = peer.connect(targetPin, { 
                 reliable: true,
                 metadata: { deviceName: getDeviceName() }
