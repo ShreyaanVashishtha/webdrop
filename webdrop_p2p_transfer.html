@@ -10,10 +10,10 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; min-height: 100vh; overflow-x: hidden; }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -28,12 +28,12 @@
             background: #09090b;
         }
         .blob {
-            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6;
+            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5;
             animation: float 20s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
         }
-        .blob-1 { background: #3b82f6; width: 50vw; height: 50vw; max-width: 500px; max-height: 500px; top: -10%; left: -10%; }
+        .blob-1 { background: #3b82f6; width: 45vw; height: 45vw; max-width: 500px; max-height: 500px; top: -10%; left: -10%; }
         .blob-2 { background: #8b5cf6; width: 40vw; height: 40vw; max-width: 400px; max-height: 400px; bottom: -20%; right: -10%; animation-delay: -5s; }
-        .blob-3 { background: #06b6d4; width: 45vw; height: 45vw; max-width: 450px; max-height: 450px; top: 40%; left: 50%; transform: translate(-50%, -50%); animation-delay: -10s; }
+        .blob-3 { background: #06b6d4; width: 40vw; height: 40vw; max-width: 450px; max-height: 450px; top: 30%; left: 40%; transform: translate(-50%, -50%); animation-delay: -10s; opacity: 0.3; }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
@@ -44,10 +44,10 @@
 
         /* Glassmorphism Panel Class */
         .glass-panel {
-            background: rgba(24, 24, 27, 0.45) !important;
+            background: rgba(24, 24, 27, 0.45);
             backdrop-filter: blur(24px) saturate(150%);
             -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
@@ -134,7 +134,7 @@
                     -----
                 </div>
 
-                <div class="bg-white/90 backdrop-blur-md p-3 rounded-2xl w-48 mx-auto mb-6 shadow-xl hidden" id="qr-container">
+                <div class="bg-white/95 backdrop-blur-md p-3 rounded-2xl w-48 mx-auto mb-6 shadow-xl hidden" id="qr-container">
                     <div id="qrcode"></div>
                 </div>
                 
@@ -338,9 +338,9 @@
             
             txt.innerText = text;
             dot.className = 'w-2 h-2 rounded-full shadow-lg ' + 
-                (status === 'online' ? 'bg-green-500 shadow-green-500/50' :
-                 status === 'connected' ? 'bg-blue-500 shadow-blue-500/50' :
-                 status === 'error' ? 'bg-red-500 shadow-red-500/50' : 'bg-yellow-500 animate-pulse shadow-yellow-500/50');
+                (status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                 status === 'connected' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' :
+                 status === 'error' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-yellow-500 animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.6)]');
 
             if(connectBtn) connectBtn.disabled = status !== 'online';
         }
@@ -715,12 +715,3 @@
     </script>
 </body>
 </html>
-```
-
-### What is fixed/added in this specific file:
-*   **The Bug:** The syntax error around `CHUNK_SIZE` is fixed. It is now safely set to 256KB (`256 * 1024`).
-*   **Liquid Glass Theme:** The `.glass-panel` and animated `.blob` backgrounds are fully applied, giving it a premium Apple-like visual depth.
-*   **Multiple Files:** Notice the `<input type="file" multiple>` tag. If you select 10 photos, the new `enqueueFiles()` logic will push them to an array and securely process them back-to-back.
-*   **Mobile Screen Wake Lock:** As soon as a transfer starts, the `requestWakeLock()` API tells your Nothing Phone or iPad not to turn off the screen. Once the queue is empty, it releases the lock. 
-
-You do not need any external folders or build tools for this. Just paste this block into your `index.html` file on GitHub, let Netlify rebuild it, and your transfers will work flawlessly!
