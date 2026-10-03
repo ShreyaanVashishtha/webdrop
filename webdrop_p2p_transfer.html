@@ -145,7 +145,7 @@
                 </div>
                 
                 <button onclick="window.copyInviteLink()" class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10 text-sm">
-                    <i class="ph-bold ph-qr-code text-lg"></i> Invite via Link
+                    <i class="ph-bold ph-link text-lg"></i> Copy Invite Link
                 </button>
             </div>
 
@@ -157,7 +157,7 @@
                 </div>
                 <input type="text" id="target-id-input" maxlength="5" placeholder="Enter PIN" class="w-full glass-panel focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 rounded-2xl p-4 text-center text-2xl font-mono text-white placeholder:text-zinc-600 transition-all outline-none">
                 <button onclick="window.initiateConnection()" id="connect-btn" disabled class="w-full bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-transparent font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm">
-                    <i class="ph-bold ph-link-simple text-lg"></i> Connect Securely
+                    <i class="ph-bold ph-plugs-connected text-lg"></i> Connect Securely
                 </button>
             </div>
         </div>
@@ -229,9 +229,8 @@
     </main>
 
     <script type="module">
-        // Import Firebase for Real-time Radar capabilities
+        // Import Firebase for Real-time Radar capabilities (Auth module removed for ease of setup)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const CHUNK_SIZE = 256 * 1024; // 256KB for robust transferring
@@ -247,7 +246,7 @@
         let transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null };
 
         // Firebase / Radar instances
-        let db, auth, appId;
+        let db;
 
         function getDeviceName() {
             const ua = navigator.userAgent;
@@ -261,31 +260,30 @@
 
         async function initRadarService(pin) {
             try {
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'webdrop-local';
-                const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                // USER'S PROVIDED FIREBASE CONFIGURATION
+                const config = {
+                    apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
+                    authDomain: "webdrop-ca210.firebaseapp.com",
+                    projectId: "webdrop-ca210",
+                    storageBucket: "webdrop-ca210.firebasestorage.app",
+                    messagingSenderId: "847573409539",
+                    appId: "1:847573409539:web:1d2e76ca059916399ed336",
+                    measurementId: "G-0K60F2FQS7"
+                };
                 
-                if (!config) {
-                    document.getElementById('radar-status-text').innerText = 'Radar Offline (Manual PIN Only)';
-                    return; // Graceful fallback if deployed outside environment
-                }
+                const appId = 'webdrop-ca210';
 
                 const app = initializeApp(config);
                 db = getFirestore(app);
-                auth = getAuth(app);
 
-                // 1. Authenticate FIRST per rules
-                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (token) await signInWithCustomToken(auth, token);
-                else await signInAnonymously(auth);
-
-                // 2. Fetch Public IP for room matching
+                // Fetch Public IP for room matching
                 let myIp = 'unknown';
                 try {
                     const res = await fetch('https://api.ipify.org?format=json');
                     myIp = (await res.json()).ip;
                 } catch(e) {}
 
-                // 3. Register device presence
+                // Register device presence (Using test mode rules, so no login needed)
                 const presenceRef = doc(db, 'artifacts', appId, 'public', 'data', 'radar_devices', pin);
                 await setDoc(presenceRef, {
                     peerId: pin,
@@ -296,15 +294,13 @@
 
                 window.addEventListener('beforeunload', () => deleteDoc(presenceRef));
 
-                // 4. Listen for other devices on the same IP
+                // Listen for other devices on the same IP
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'radar_devices');
                 onSnapshot(colRef, (snapshot) => {
                     const peers = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        // Filter in memory (Rule compliant)
                         if (data.ip === myIp && data.peerId !== pin) {
-                            // Only show if active in last 5 minutes
                             if (Date.now() - data.timestamp < 300000) {
                                 peers.push(data);
                             }
@@ -315,6 +311,7 @@
 
             } catch (err) {
                 console.warn("Radar init failed:", err);
+                document.getElementById('radar-status-text').innerText = 'Radar Offline (Manual PIN Only)';
             }
         }
 
