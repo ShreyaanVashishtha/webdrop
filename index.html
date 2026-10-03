@@ -9,7 +9,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#09090b">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
@@ -81,6 +88,21 @@
 </head>
 
 <body class="min-h-screen flex flex-col selection:bg-blue-500/30">
+
+    <!-- Connection Approval Modal -->
+    <div id="approval-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-4 fade-in">
+        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl">
+            <div class="bg-blue-500/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="ph-fill ph-devices text-3xl text-blue-400 animate-pulse"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Connection Request</h3>
+            <p class="text-zinc-400 mb-8">Device PIN <span id="requesting-pin" class="font-mono text-white font-bold text-lg bg-zinc-800 px-2 py-1 rounded shadow-inner">---</span> wants to connect.</p>
+            <div class="flex gap-4">
+                <button onclick="rejectConnection()" class="flex-1 bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-400 py-3 rounded-xl font-medium transition-colors border border-zinc-700 hover:border-red-500/50">Decline</button>
+                <button onclick="acceptConnection()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">Accept</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Navbar -->
     <header class="px-6 py-4 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
@@ -170,7 +192,8 @@
                             <i id="transfer-icon" class="ph-fill ph-upload-simple text-4xl text-blue-500 animate-bounce"></i>
                         </div>
                         <p class="text-white font-medium text-lg mb-1" id="transfer-title">Sending File</p>
-                        <p class="text-zinc-400 text-sm truncate max-w-full mb-8" id="transfer-filename">...</p>
+                        <p class="text-zinc-400 text-sm truncate max-w-full mb-2" id="transfer-filename">...</p>
+                        <p class="text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 hidden" id="queue-status">File 1 of 3</p>
                         
                         <div class="w-full max-w-xs space-y-2">
                             <div class="flex justify-between text-xs font-mono text-zinc-500">
@@ -188,9 +211,9 @@
                         <i class="ph-fill ph-cloud-arrow-up text-4xl text-blue-400"></i>
                     </div>
                     <h3 class="text-xl font-bold text-white mb-2">Send Files</h3>
-                    <p class="text-zinc-400 text-sm mb-8 max-w-[200px]">Drag & drop anywhere, or click to browse</p>
+                    <p class="text-zinc-400 text-sm mb-8 max-w-[250px]">Drag & drop files or folders, or click to browse</p>
                     
-                    <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
+                    <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
                     <button onclick="document.getElementById('file-input').click()" class="bg-white text-zinc-900 hover:bg-zinc-200 px-8 py-3 rounded-xl font-bold transition-colors">
                         Select File
                     </button>
@@ -226,6 +249,12 @@
         let peer = null;
         let conn = null;
         let myPin = '';
+        let pendingConnection = null;
+        let wakeLock = null;
+        
+        // Queue state
+        let transferQueue = [];
+        let isProcessingQueue = false;
         
         // Transfer state objects
         let transferState = {
@@ -240,6 +269,25 @@
         };
 
         // --- Utility Functions ---
+        
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock active');
+                }
+            } catch (err) {
+                console.log('Wake Lock failed:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => wakeLock = null);
+                console.log('Screen Wake Lock released');
+            }
+        }
+        
         function generatePIN() {
             return Math.floor(10000 + Math.random() * 90000).toString();
         }
@@ -303,6 +351,11 @@
 
         // --- Core WebRTC Initialization ---
         function initApp() {
+            // Register PWA Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
+            }
+
             myPin = generatePIN();
             document.getElementById('my-id-display').innerText = myPin;
 
@@ -341,7 +394,17 @@
                     connection.close();
                     return;
                 }
-                setupConnectionHandlers(connection);
+                
+                // Show approval modal instead of immediately accepting
+                pendingConnection = connection;
+                document.getElementById('requesting-pin').innerText = connection.peer;
+                document.getElementById('approval-modal').classList.remove('hidden');
+                document.getElementById('approval-modal').classList.add('flex');
+                
+                // Temporary listener for early disconnection before approval
+                connection.on('close', () => {
+                    if (pendingConnection === connection) rejectConnection();
+                });
             });
 
             peer.on('disconnected', () => {
@@ -372,6 +435,27 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
+        
+        function acceptConnection() {
+            document.getElementById('approval-modal').classList.add('hidden');
+            document.getElementById('approval-modal').classList.remove('flex');
+            
+            if (pendingConnection) {
+                setupConnectionHandlers(pendingConnection, true);
+                pendingConnection = null;
+            }
+        }
+
+        function rejectConnection() {
+            document.getElementById('approval-modal').classList.add('hidden');
+            document.getElementById('approval-modal').classList.remove('flex');
+            
+            if (pendingConnection) {
+                pendingConnection.send(JSON.stringify({ type: 'auth', status: 'rejected' }));
+                setTimeout(() => pendingConnection.close(), 500);
+                pendingConnection = null;
+            }
+        }
 
         function copyInviteLink() {
             const url = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
@@ -388,32 +472,54 @@
                 return;
             }
             
-            updateAppStatus('connecting', 'Connecting...');
+            updateAppStatus('connecting', 'Waiting for approval...');
             const connection = peer.connect(targetPin, { reliable: true });
-            setupConnectionHandlers(connection);
+            setupConnectionHandlers(connection, false);
         }
 
-        function setupConnectionHandlers(connection) {
+        function setupConnectionHandlers(connection, isReceiver) {
             conn = connection;
             
             conn.on('open', () => {
-                showToast('Connected securely!', 'success');
-                updateAppStatus('connected', 'Connected');
-                
-                // Swap UI Views
-                document.getElementById('setup-view').classList.add('hidden');
-                document.getElementById('active-view').classList.remove('hidden');
-                document.getElementById('active-view').classList.add('flex');
-                document.getElementById('connected-id-display').innerText = conn.peer;
+                if (isReceiver) {
+                    // Tell sender we accepted
+                    conn.send(JSON.stringify({ type: 'auth', status: 'accepted' }));
+                    finalizeConnection();
+                }
             });
 
-            conn.on('data', handleIncomingData);
+            conn.on('data', (data) => {
+                if (typeof data === 'string') {
+                    const msg = JSON.parse(data);
+                    if (msg.type === 'auth') {
+                        if (msg.status === 'accepted') {
+                            finalizeConnection();
+                        } else {
+                            showToast('Connection declined by device.', 'error');
+                            disconnect();
+                        }
+                        return;
+                    }
+                }
+                handleIncomingData(data);
+            });
 
             conn.on('close', handleDisconnect);
             conn.on('error', () => {
                 showToast('Connection error.', 'error');
                 handleDisconnect();
             });
+        }
+        
+        function finalizeConnection() {
+            showToast('Connected securely!', 'success');
+            updateAppStatus('connected', 'Connected');
+            
+            // Swap UI Views
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('active-view').classList.remove('hidden');
+            document.getElementById('active-view').classList.add('flex');
+            document.getElementById('connected-id-display').innerText = conn.peer;
         }
 
         function disconnect() {
@@ -439,14 +545,27 @@
 
         function handleFileSelect(e) {
             if (e.target.files.length > 0) {
-                startSendingFile(e.target.files[0]);
+                enqueueFiles(Array.from(e.target.files));
             }
             e.target.value = '';
         }
+        
+        function enqueueFiles(files) {
+            transferQueue.push(...files);
+            processQueue();
+        }
+
+        function processQueue() {
+            if (isProcessingQueue || transferQueue.length === 0 || !conn || !conn.open) return;
+            
+            isProcessingQueue = true;
+            requestWakeLock(); // Lock screen on during batch transfer
+            
+            const file = transferQueue.shift();
+            startSendingFile(file);
+        }
 
         function startSendingFile(file) {
-            if (!conn || !conn.open || transferState.isTransferring) return;
-            
             transferState = {
                 isTransferring: true,
                 role: 'sender',
@@ -462,7 +581,8 @@
                 type: 'meta',
                 name: file.name,
                 size: file.size,
-                mime: file.type
+                mime: file.type || 'application/octet-stream',
+                queueRemaining: transferQueue.length // Alert receiver of remaining files
             }));
         }
 
@@ -490,6 +610,7 @@
                 
                 if (msg.type === 'meta') {
                     // Incoming file setup
+                    requestWakeLock();
                     transferState = {
                         isTransferring: true,
                         role: 'receiver',
@@ -497,7 +618,7 @@
                         receivedBytes: 0,
                         meta: msg
                     };
-                    showTransferUI('receiver', msg.name);
+                    showTransferUI('receiver', msg.name, msg.queueRemaining);
                     conn.send(JSON.stringify({ type: 'ack' })); // Request first chunk
                 
                 } else if (msg.type === 'ack') {
@@ -535,22 +656,43 @@
         function resetTransferState() {
             transferState = { isTransferring: false };
             document.getElementById('transfer-overlay').classList.add('hidden');
+            document.getElementById('queue-status').classList.add('hidden');
         }
 
         function finishTransfer() {
             updateTransferProgress(1, 1); // 100%
-            setTimeout(resetTransferState, 500);
+            setTimeout(() => {
+                resetTransferState();
+                isProcessingQueue = false;
+                
+                // Check if more files are in the queue
+                if (transferQueue.length > 0) {
+                    processQueue();
+                } else {
+                    releaseWakeLock(); // Allow screen to sleep again when finished
+                }
+            }, 500);
         }
 
         // --- UI Updates ---
-        function showTransferUI(role, filename) {
+        function showTransferUI(role, filename, queueRemaining = 0) {
             const overlay = document.getElementById('transfer-overlay');
             const title = document.getElementById('transfer-title');
             const icon = document.getElementById('transfer-icon');
             const nameEl = document.getElementById('transfer-filename');
+            const queueStatus = document.getElementById('queue-status');
             
             overlay.classList.remove('hidden');
             nameEl.innerText = filename;
+            
+            // Queue Indicator Logic
+            if (transferQueue.length > 0 || queueRemaining > 0) {
+                queueStatus.classList.remove('hidden');
+                const remaining = role === 'sender' ? transferQueue.length : queueRemaining;
+                queueStatus.innerText = `+${remaining} more in queue`;
+            } else {
+                queueStatus.classList.add('hidden');
+            }
             
             if (role === 'sender') {
                 title.innerText = 'Sending File';
@@ -597,52 +739,29 @@
                         <p class="text-zinc-500 text-xs">${formatBytes(size)}</p>
                     </div>
                 </div>
-                <a href="${url}" download="${filename}" class="shrink-0 p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors ml-2" title="Save File">
-                    <i class="ph-bold ph-download-simple text-lg"></i>
-                </a>
-            `;
-            list.insertBefore(item, list.firstChild);
-            count.innerText = parseInt(count.innerText) + 1;
-
-            // Auto-trigger download for standard behavior
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        // --- Drag and Drop Setup ---
-        function setupDragAndDrop() {
-            const dropZone = document.getElementById('drop-zone');
-            if (!dropZone) return;
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => {
-                    if (conn && conn.open && !transferState.isTransferring) {
-                        dropZone.classList.add('drag-active');
-                    }
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => {
-                    dropZone.classList.remove('drag-active');
-                }, false);
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                if (conn && conn.open && !transferState.isTransferring) {
-                    if (e.dataTransfer.files.length > 0) {
-                        startSendingFile(e.dataTransfer.files[0]);
+            dropZone.addEventListener('drop', async (e) => {
+                if (conn && conn.open && !transferState.isTransferring && !isProcessingQueue) {
+                    const items = e.dataTransfer.items;
+                    if (items) {
+                        showToast('Processing items...', 'info');
+                        const filesAndFolders = [];
+                        
+                        for (let i = 0; i < items.length; i++) {
+                            const item = items[i];
+                            if (item.kind === 'file') {
+                                const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+                                if (entry && entry.isDirectory) {
+                                    // It's a Folder! Zip it before queueing
+                                    const zipFile = await processDirectory(entry);
+                                    filesAndFolders.push(zipFile);
+                                } else {
+                                    filesAndFolders.push(item.getAsFile());
+                                }
+                            }
+                        }
+                        if (filesAndFolders.length > 0) enqueueFiles(filesAndFolders);
+                    } else if (e.dataTransfer.files.length > 0) {
+                        enqueueFiles(Array.from(e.dataTransfer.files));
                     }
                 }
             }, false);
@@ -650,6 +769,29 @@
             // Allow dropping anywhere on document when connected
             document.body.addEventListener('dragover', (e) => e.preventDefault());
             document.body.addEventListener('drop', (e) => e.preventDefault());
+        }
+
+        // --- Folder Processing (JSZip) ---
+        async function processDirectory(dirEntry) {
+            const zip = new JSZip();
+            
+            async function readDirectory(entry, path) {
+                if (entry.isFile) {
+                    const file = await new Promise(resolve => entry.file(resolve));
+                    zip.file(path + file.name, file);
+                } else if (entry.isDirectory) {
+                    const dirReader = entry.createReader();
+                    const entries = await new Promise(resolve => dirReader.readEntries(resolve));
+                    for (let i = 0; i < entries.length; i++) {
+                        await readDirectory(entries[i], path + entry.name + '/');
+                    }
+                }
+            }
+            
+            await readDirectory(dirEntry, '');
+            showToast(`Compressing folder: ${dirEntry.name}...`, 'info');
+            const blob = await zip.generateAsync({ type: 'blob' });
+            return new File([blob], `${dirEntry.name}.zip`, { type: 'application/zip' });
         }
 
         // Initialize application when DOM is ready
