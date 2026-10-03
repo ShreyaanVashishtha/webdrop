@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WebDrop - Fast P2P Transfer</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        
+<comment-tag id="1">        /* Animations */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.1) !important;
+        }</comment-tag id="1" text="        /* Liquid Glass & Background Animations */
+        .blob-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            overflow: hidden; z-index: -1; pointer-events: none;
+            background: #09090b;
+        }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5;
+            animation: float 20s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+        .blob-1 { background: #3b82f6; width: 500px; height: 500px; top: -10%; left: -10%; }
+        .blob-2 { background: #8b5cf6; width: 400px; height: 400px; bottom: -20%; right: -10%; animation-delay: -5s; }
+        .blob-3 { background: #06b6d4; width: 450px; height: 450px; top: 40%; left: 50%; transform: translate(-50%, -50%); animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Glassmorphism Panel Class */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.4) !important;
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Original & New Component Animations */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes liquidPulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 25px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            animation: liquidPulse 2s infinite;
+        }" type="suggestion">
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        
+        .toast {
+            min-width: 250px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: #18181b;
+            border: 1px solid #27272a;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: auto;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        /* QR Code Styling override */
+        #qrcode img { margin: 0 auto; border-radius: 8px; }
+    </style>
+</head>
+
+<comment-tag id="2"><body class="min-h-screen flex flex-col selection:bg-blue-500/30">
+
+    <!-- Navbar --></comment-tag id="2" text="<body class="min-h-screen flex flex-col selection:bg-blue-500/30 bg-transparent">
+
+    <!-- Animated Glass Background -->
+    <div class="blob-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navbar -->" type="suggestion">
+    <header class="px-6 py-4 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-xl">
+                    <i class="ph-bold ph-paper-plane-tilt text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white tracking-tight">WebDrop</h1>
+            </div>
+            
+            <div id="status-indicator" class="flex items-center space-x-2 px-4 py-2 bg-zinc-900 rounded-full border border-zinc-800 text-sm font-medium transition-colors">
+                <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" id="status-dot"></div>
+                <span class="text-zinc-400 capitalize" id="status-text">Connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Area -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full relative">
+        
+        <!-- ================= SETUP VIEW ================= -->
+        <div id="setup-view" class="w-full max-w-md flex flex-col gap-8 slide-up">
+            
+            <!-- My ID Card -->
+<comment-tag id="3">            <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-[2rem] w-full text-center shadow-2xl relative overflow-hidden"></comment-tag id="3" text="            <div class="glass-panel p-8 rounded-[2rem] w-full text-center relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]">" type="suggestion">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <h2 class="text-zinc-400 text-sm font-semibold tracking-widest uppercase mb-4">Your Device PIN</h2>
+                
+                <div class="text-6xl font-black text-white tracking-widest font-mono mb-6" id="my-id-display">
+                    -----
+                </div>
+
+                <div class="bg-white p-3 rounded-2xl w-48 mx-auto mb-6 shadow-inner hidden" id="qr-container">
+                    <div id="qrcode"></div>
+                </div>
+                
+                <button onclick="copyInviteLink()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 border border-zinc-700 hover:border-zinc-600">
+                    <i class="ph-bold ph-link text-lg"></i> Copy Invite Link
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="h-px bg-zinc-800 flex-1"></div>
+                <span class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Or Connect To</span>
+                <div class="h-px bg-zinc-800 flex-1"></div>
+            </div>
+
+            <!-- Connect Form -->
+            <div class="w-full space-y-4">
+                <input type="text" id="target-id-input" maxlength="5" placeholder="Enter 5-digit PIN" class="w-full bg-zinc-900 border border-zinc-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl p-5 text-center text-3xl font-mono text-white placeholder:text-zinc-700 transition-all outline-none">
+                <button onclick="initiateConnection()" id="connect-btn" disabled class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2 text-lg">
+                    <i class="ph-bold ph-plugs-connected text-xl"></i> Connect
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= ACTIVE VIEW ================= -->
+        <div id="active-view" class="w-full flex-col gap-6 hidden fade-in w-full">
+            
+            <!-- Connection Header -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <div class="bg-blue-500/10 p-3 rounded-xl">
+                            <i class="ph-fill ph-devices text-2xl text-blue-400"></i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-zinc-900 rounded-full"></div>
+                    </div>
+                    <div>
+                        <p class="text-zinc-400 text-sm font-medium">Securely connected to</p>
+                        <p class="text-white font-mono font-bold text-lg" id="connected-id-display">...</p>
+                    </div>
+                </div>
+                <button onclick="disconnect()" class="p-3 bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 rounded-xl transition-colors">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <!-- Send Area (Drag & Drop) -->
+<comment-tag id="4">                <div id="drop-zone" class="border-2 border-dashed border-zinc-800 hover:border-blue-500/50 bg-zinc-900/50 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center min-h-[350px] transition-all relative overflow-hidden group"></comment-tag id="4" text="                <div id="drop-zone" class="glass-panel border-2 border-dashed border-transparent hover:border-blue-500/50 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center min-h-[350px] transition-all duration-300 relative overflow-hidden group">" type="suggestion">
+                    
+                    <!-- Progress Overlay (Visible during transfer) -->
+                    <div id="transfer-overlay" class="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center p-8 hidden z-10">
+                        <div class="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+                            <i id="transfer-icon" class="ph-fill ph-upload-simple text-4xl text-blue-500 animate-bounce"></i>
+                        </div>
+                        <p class="text-white font-medium text-lg mb-1" id="transfer-title">Sending File</p>
+                        <p class="text-zinc-400 text-sm truncate max-w-full mb-8" id="transfer-filename">...</p>
+                        
+                        <div class="w-full max-w-xs space-y-2">
+                            <div class="flex justify-between text-xs font-mono text-zinc-500">
+                                <span>0%</span>
+                                <span id="transfer-percent">0%</span>
+                            </div>
+                            <div class="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                <div id="transfer-progress-bar" class="h-full bg-blue-500 rounded-full w-0 transition-all duration-100 ease-out"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Default Upload State -->
+                    <div class="bg-zinc-800 p-5 rounded-full mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-cloud-arrow-up text-4xl text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Send Files</h3>
+                    <p class="text-zinc-400 text-sm mb-8 max-w-[200px]">Drag & drop anywhere, or click to browse</p>
+                    
+                    <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
+                    <button onclick="document.getElementById('file-input').click()" class="bg-white text-zinc-900 hover:bg-zinc-200 px-8 py-3 rounded-xl font-bold transition-colors">
+                        Select File
+                    </button>
+                </div>
+
+                <!-- Received Files Area -->
+<comment-tag id="5">                <div class="bg-zinc-900/50 border border-zinc-800 rounded-[2rem] p-6 flex flex-col min-h-[350px]"></comment-tag id="5" text="                <div class="glass-panel rounded-[2rem] p-6 flex flex-col min-h-[350px] transition-all duration-500">" type="suggestion">
+                    <h3 class="text-zinc-400 text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
+                        Received Files
+                        <span id="received-count" class="bg-zinc-800 text-zinc-300 py-1 px-3 rounded-full text-xs">0</span>
+                    </h3>
+                    
+                    <div id="received-list" class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2">
+                        <!-- Empty State -->
+                        <div id="empty-received" class="h-full flex flex-col items-center justify-center text-zinc-600">
+                            <i class="ph-fill ph-tray text-5xl mb-3 opacity-50"></i>
+                            <p class="text-sm font-medium">No files received yet</p>
+                        </div>
+                        <!-- Files will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- Configuration & State ---
+        // 256KB chunks perform exceptionally well for WebRTC data channels on local networks
+-         const CHUNK_SIZE = 256
+1024; 
+        
+        let peer = null;
+        let conn = null;
+        let myPin = '';
+        
+        // Transfer state objects
+        let transferState = {
+            isTransferring: false,
+            role: null, // 'sender' | 'receiver'
+            file: null,
+            offset: 0,
+            reader: null,
+            receivedBuffers: [],
+            receivedBytes: 0,
+            meta: null
+        };
+
+        // --- Utility Functions ---
+        function generatePIN() {
+            return Math.floor(10000 + Math.random() * 90000).toString();
+        }
+
+        function formatBytes(bytes) {
+            if (!+bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext)) return 'ph-image text-purple-400';
+            if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return 'ph-video-camera text-red-400';
+            if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return 'ph-music-notes text-yellow-400';
+            if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return 'ph-file-text text-blue-400';
+            if (['zip', 'rar', 'tar', 'gz'].includes(ext)) return 'ph-file-archive text-orange-400';
+            return 'ph-file text-zinc-400';
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = '<i class="ph-fill ph-info text-blue-400 text-xl"></i>';
+            if (type === 'error') icon = '<i class="ph-fill ph-warning-circle text-red-400 text-xl"></i>';
+            if (type === 'success') icon = '<i class="ph-fill ph-check-circle text-green-400 text-xl"></i>';
+
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    ${icon}
+                    <span class="font-medium text-sm">${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-500 hover:text-white transition-colors">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function updateAppStatus(status, text) {
+            const dot = document.getElementById('status-dot');
+            const txt = document.getElementById('status-text');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            txt.innerText = text;
+            dot.className = 'w-2 h-2 rounded-full ' + 
+                (status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                 status === 'connected' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' :
+                 status === 'error' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse');
+
+            connectBtn.disabled = status !== 'online';
+        }
+
+        // --- Core WebRTC Initialization ---
+        function initApp() {
+            myPin = generatePIN();
+            document.getElementById('my-id-display').innerText = myPin;
+
+            // Generate QR Code containing the connection URL
+            const connectUrl = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
+            document.getElementById('qr-container').classList.remove('hidden');
+            new QRCode(document.getElementById("qrcode"), {
+                text: connectUrl,
+                width: 160,
+                height: 160,
+                colorDark : "#18181b",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+
+            // Initialize PeerJS
+            // Using default cloud servers. For P2P transfer, signaling only brokers the connection.
+            peer = new Peer(myPin, {
+                debug: 2,
+                config: {
+                    'iceServers': [
+                        { url: 'stun:stun.l.google.com:19302' },
+                        { url: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', (id) => {
+                console.log('Peer ID initialized:', id);
+                updateAppStatus('online', 'Ready to connect');
+                checkUrlForAutoConnect();
+            });
+
+            peer.on('connection', (connection) => {
+                if (conn && conn.open) {
+                    connection.close();
+                    return;
+                }
+                setupConnectionHandlers(connection);
+            });
+
+            peer.on('disconnected', () => {
+                if (peer && !peer.destroyed) peer.reconnect();
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                if (err.type === 'peer-unavailable') {
+                    showToast('Device PIN not found or offline.', 'error');
+                } else if (err.type === 'network') {
+                    updateAppStatus('error', 'Network Error');
+                    showToast('Signaling server blocked. Try a different network.', 'error');
+                } else {
+                    updateAppStatus('error', 'Connection Failed');
+                }
+            });
+            
+            setupDragAndDrop();
+        }
+
+        function checkUrlForAutoConnect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetPin = urlParams.get('c');
+            if (targetPin && targetPin !== myPin) {
+                document.getElementById('target-id-input').value = targetPin;
+                initiateConnection();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function copyInviteLink() {
+            const url = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Invite link copied!', 'success');
+            });
+        }
+
+        // --- Connection Management ---
+        function initiateConnection() {
+            const targetPin = document.getElementById('target-id-input').value.trim();
+            if (!targetPin || targetPin === myPin || targetPin.length !== 5) {
+                showToast('Enter a valid 5-digit remote PIN.', 'error');
+                return;
+            }
+            
+            updateAppStatus('connecting', 'Connecting...');
+            const connection = peer.connect(targetPin, { reliable: true });
+            setupConnectionHandlers(connection);
+        }
+
+        function setupConnectionHandlers(connection) {
+            conn = connection;
+            
+            conn.on('open', () => {
+                showToast('Connected securely!', 'success');
+                updateAppStatus('connected', 'Connected');
+                
+                // Swap UI Views
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('active-view').classList.remove('hidden');
+                document.getElementById('active-view').classList.add('flex');
+                document.getElementById('connected-id-display').innerText = conn.peer;
+            });
+
+            conn.on('data', handleIncomingData);
+
+            conn.on('close', handleDisconnect);
+            conn.on('error', () => {
+                showToast('Connection error.', 'error');
+                handleDisconnect();
+            });
+        }
+
+        function disconnect() {
+            if (conn) conn.close();
+            handleDisconnect();
+        }
+
+        function handleDisconnect() {
+            conn = null;
+            resetTransferState();
+            
+            updateAppStatus('online', 'Ready to connect');
+            
+            document.getElementById('active-view').classList.add('hidden');
+            document.getElementById('active-view').classList.remove('flex');
+            document.getElementById('setup-view').classList.remove('hidden');
+            document.getElementById('target-id-input').value = '';
+            
+            showToast('Device disconnected.', 'info');
+        }
+
+        // --- File Transfer Logic (Ping-Pong flow control for large files) ---
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                startSendingFile(e.target.files[0]);
+            }
+            e.target.value = '';
+        }
+
+        function startSendingFile(file) {
+            if (!conn || !conn.open || transferState.isTransferring) return;
+            
+            transferState = {
+                isTransferring: true,
+                role: 'sender',
+                file: file,
+                offset: 0,
+                reader: new FileReader()
+            };
+
+            showTransferUI('sender', file.name);
+
+            // Send metadata header first
+            conn.send(JSON.stringify({
+                type: 'meta',
+                name: file.name,
+                size: file.size,
+                mime: file.type
+            }));
+        }
+
+        function sendNextChunk() {
+            const state = transferState;
+            if (state.offset >= state.file.size) {
+                // Done sending
+                conn.send(JSON.stringify({ type: 'eof' }));
+                finishTransfer();
+                return;
+            }
+
+            const slice = state.file.slice(state.offset, state.offset + CHUNK_SIZE);
+            state.reader.onload = (e) => {
+                conn.send(e.target.result); // Send raw ArrayBuffer
+                state.offset += slice.size;
+                updateTransferProgress(state.offset, state.file.size);
+            };
+            state.reader.readAsArrayBuffer(slice);
+        }
+
+        function handleIncomingData(data) {
+            if (typeof data === 'string') {
+                const msg = JSON.parse(data);
+                
+                if (msg.type === 'meta') {
+                    // Incoming file setup
+                    transferState = {
+                        isTransferring: true,
+                        role: 'receiver',
+                        receivedBuffers: [],
+                        receivedBytes: 0,
+                        meta: msg
+                    };
+                    showTransferUI('receiver', msg.name);
+                    conn.send(JSON.stringify({ type: 'ack' })); // Request first chunk
+                
+                } else if (msg.type === 'ack') {
+                    // Remote acknowledged previous chunk, send next
+                    sendNextChunk();
+                
+                } else if (msg.type === 'eof') {
+                    // File complete
+                    assembleAndDownloadReceivedFile();
+                }
+            } else {
+                // Incoming Binary Chunk
+                const state = transferState;
+                if (!state.meta) return;
+
+                state.receivedBuffers.push(data);
+                state.receivedBytes += data.byteLength;
+                
+                updateTransferProgress(state.receivedBytes, state.meta.size);
+                
+                // Backpressure: Only request next chunk after processing this one
+                conn.send(JSON.stringify({ type: 'ack' }));
+            }
+        }
+
+        function assembleAndDownloadReceivedFile() {
+            const state = transferState;
+            const blob = new Blob(state.receivedBuffers, { type: state.meta.mime });
+            
+            addFileToHistory(blob, state.meta.name, state.meta.size);
+            finishTransfer();
+            showToast(`Received: ${state.meta.name}`, 'success');
+        }
+
+        function resetTransferState() {
+            transferState = { isTransferring: false };
+            document.getElementById('transfer-overlay').classList.add('hidden');
+        }
+
+        function finishTransfer() {
+            updateTransferProgress(1, 1); // 100%
+            setTimeout(resetTransferState, 500);
+        }
+
+        // --- UI Updates ---
+        function showTransferUI(role, filename) {
+            const overlay = document.getElementById('transfer-overlay');
+            const title = document.getElementById('transfer-title');
+            const icon = document.getElementById('transfer-icon');
+            const nameEl = document.getElementById('transfer-filename');
+            
+            overlay.classList.remove('hidden');
+            nameEl.innerText = filename;
+            
+            if (role === 'sender') {
+                title.innerText = 'Sending File';
+                icon.className = 'ph-fill ph-upload-simple text-5xl text-blue-500 animate-bounce';
+            } else {
+                title.innerText = 'Receiving File';
+                icon.className = 'ph-fill ph-download-simple text-5xl text-purple-500 animate-bounce';
+            }
+            updateTransferProgress(0, 1);
+        }
+
+        function updateTransferProgress(current, total) {
+            const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+            document.getElementById('transfer-percent').innerText = `${percent}%`;
+            document.getElementById('transfer-progress-bar').style.width = `${percent}%`;
+            
+            // Dynamic color shift as it approaches 100%
+            const bar = document.getElementById('transfer-progress-bar');
+            if (percent === 100) {
+                bar.classList.replace('bg-blue-500', 'bg-green-500');
+            } else if (!bar.classList.contains('bg-blue-500')) {
+                bar.classList.replace('bg-green-500', 'bg-blue-500');
+            }
+        }
+
+        function addFileToHistory(blob, filename, size) {
+            const list = document.getElementById('received-list');
+            const empty = document.getElementById('empty-received');
+            const count = document.getElementById('received-count');
+            
+            if (empty) empty.remove();
+
+            const url = URL.createObjectURL(blob);
+            const item = document.createElement('div');
+            item.className = 'bg-zinc-800 border border-zinc-700/50 p-3 rounded-xl flex items-center justify-between group hover:bg-zinc-700 transition-colors fade-in';
+            
+            item.innerHTML = `
+                <div class="flex items-center gap-4 overflow-hidden">
+                    <div class="bg-zinc-900 p-2.5 rounded-lg shrink-0">
+                        <i class="ph-fill ${getFileIcon(filename)} text-2xl"></i>
+                    </div>
+                    <div class="truncate">
+                        <p class="text-white font-medium text-sm truncate mb-0.5" title="${filename}">${filename}</p>
+                        <p class="text-zinc-500 text-xs">${formatBytes(size)}</p>
+                    </div>
+                </div>
+                <a href="${url}" download="${filename}" class="shrink-0 p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors ml-2" title="Save File">
+                    <i class="ph-bold ph-download-simple text-lg"></i>
+                </a>
+            `;
+            list.insertBefore(item, list.firstChild);
+            count.innerText = parseInt(count.innerText) + 1;
+
+            // Auto-trigger download for standard behavior
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- Drag and Drop Setup ---
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            if (!dropZone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    if (conn && conn.open && !transferState.isTransferring) {
+                        dropZone.classList.add('drag-active');
+                    }
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('drag-active');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                if (conn && conn.open && !transferState.isTransferring) {
+                    if (e.dataTransfer.files.length > 0) {
+                        startSendingFile(e.dataTransfer.files[0]);
+                    }
+                }
+            }, false);
+            
+            // Allow dropping anywhere on document when connected
+            document.body.addEventListener('dragover', (e) => e.preventDefault());
+            document.body.addEventListener('drop', (e) => e.preventDefault());
+        }
+
+        // Initialize application when DOM is ready
+        window.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
