@@ -15,13 +15,11 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; min-height: 100vh; overflow-x: hidden; }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
         
-        /* Liquid Glass Background */
         .blob-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: -1; pointer-events: none; background: #09090b; }
         .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5; animation: float 20s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         .blob-1 { background: #3b82f6; width: 45vw; height: 45vw; max-width: 500px; max-height: 500px; top: -10%; left: -10%; }
@@ -35,7 +33,6 @@
             100% { transform: translate(0, 0) scale(1); }
         }
 
-        /* Glassmorphism Panel */
         .glass-panel {
             background: rgba(24, 24, 27, 0.45);
             backdrop-filter: blur(24px) saturate(150%);
@@ -44,7 +41,6 @@
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        /* Radar Animations */
         .radar-ping {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 100px; height: 100px; border-radius: 50%;
@@ -60,21 +56,13 @@
             100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; border-width: 1px; }
         }
 
-        /* Security Modal Overlay */
-        #security-modal-overlay {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        /* Generic Animations */
+        #security-modal-overlay { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .drag-active { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.15) !important; }
-
-        #qrcode img { margin: 0 auto; border-radius: 8px; }
     </style>
 </head>
 
@@ -86,7 +74,7 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- Security Gateway Modal (Hidden by default) -->
+    <!-- Security Gateway Modal -->
     <div id="security-modal-overlay" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="glass-panel p-8 rounded-3xl w-full max-w-sm text-center transform scale-95 transition-transform duration-300" id="security-modal-card">
             <div class="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 relative">
@@ -94,25 +82,25 @@
                 <i class="ph-fill ph-shield-check text-4xl text-blue-400 relative z-10"></i>
             </div>
             <h2 class="text-2xl font-bold text-white mb-2">Incoming Connection</h2>
-            <p class="text-zinc-400 text-sm mb-8">A device is trying to connect via Radar/PIN. Do you want to accept this connection?</p>
+            <p class="text-zinc-400 text-sm mb-8">A device is trying to connect. Do you want to accept this secure connection?</p>
             
             <div class="bg-black/30 rounded-xl p-4 mb-8 border border-white/5">
-                <p class="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-1">Device ID</p>
-                <p class="text-white font-mono text-lg font-bold" id="incoming-device-id">UNKNOWN</p>
+                <p class="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-1">Attempting to connect</p>
+                <p class="text-white text-lg font-bold truncate" id="incoming-device-name">Unknown Device</p>
+                <p class="text-zinc-500 font-mono text-sm mt-1">PIN: <span id="incoming-device-id">UNKNOWN</span></p>
             </div>
 
             <div class="flex gap-4">
-                <button onclick="declineConnection()" class="flex-1 bg-white/5 hover:bg-red-500/20 text-white hover:text-red-400 font-bold py-3 rounded-xl transition-all border border-transparent hover:border-red-500/30">
+                <button onclick="window.declineConnection()" class="flex-1 bg-white/5 hover:bg-red-500/20 text-white hover:text-red-400 font-bold py-3 rounded-xl transition-all border border-transparent hover:border-red-500/30">
                     Decline
                 </button>
-                <button onclick="acceptConnection()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25">
+                <button onclick="window.acceptConnection()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25">
                     Accept
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Navbar -->
     <header class="px-6 py-4 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl sticky top-0 z-50">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -131,36 +119,36 @@
 
     <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full relative z-10">
         
-        <!-- ================= RADAR / SETUP VIEW ================= -->
         <div id="setup-view" class="w-full max-w-md flex flex-col gap-8 slide-up">
             
-            <!-- Radar Scanner Interface -->
             <div class="glass-panel p-10 rounded-[2.5rem] w-full text-center relative overflow-hidden transition-all duration-500">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500"></div>
                 
-                <h2 class="text-zinc-400 text-xs font-bold tracking-widest uppercase mb-12">Radar Scanning...</h2>
+                <h2 id="radar-status-text" class="text-zinc-400 text-xs font-bold tracking-widest uppercase mb-12">Radar Scanning...</h2>
                 
-                <!-- Animated Radar Core -->
-                <div class="relative w-32 h-32 mx-auto mb-12">
+                <div class="relative w-48 h-48 mx-auto mb-12" id="radar-container">
                     <div class="radar-ping"></div>
                     <div class="radar-ping"></div>
                     <div class="radar-ping"></div>
-                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] z-10">
-                        <i class="ph-fill ph-radar text-4xl text-white"></i>
+                    
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full w-16 h-16 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] z-10">
+                        <i class="ph-fill ph-radar text-2xl text-white"></i>
                     </div>
+                    
+                    <!-- Real-time Discovered Devices will be injected here -->
+                    <div id="radar-devices-container" class="absolute inset-0 z-20"></div>
                 </div>
 
                 <div class="bg-black/30 rounded-2xl p-4 border border-white/5 mb-6">
-                    <p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Your Radar PIN</p>
+                    <p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Your Device PIN</p>
                     <div class="text-4xl font-black text-white tracking-widest font-mono drop-shadow-md" id="my-id-display">-----</div>
                 </div>
                 
-                <button onclick="copyInviteLink()" class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10 text-sm">
+                <button onclick="window.copyInviteLink()" class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10 text-sm">
                     <i class="ph-bold ph-qr-code text-lg"></i> Invite via Link
                 </button>
             </div>
 
-            <!-- Manual Connect (Fallback for strictly isolated networks) -->
             <div class="w-full space-y-4">
                 <div class="flex items-center space-x-4 opacity-40 mb-4">
                     <div class="h-px bg-white/20 flex-1"></div>
@@ -168,13 +156,12 @@
                     <div class="h-px bg-white/20 flex-1"></div>
                 </div>
                 <input type="text" id="target-id-input" maxlength="5" placeholder="Enter PIN" class="w-full glass-panel focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 rounded-2xl p-4 text-center text-2xl font-mono text-white placeholder:text-zinc-600 transition-all outline-none">
-                <button onclick="initiateConnection()" id="connect-btn" disabled class="w-full bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-transparent font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm">
-                    <i class="ph-bold ph-link-simple text-lg"></i> Force Connection
+                <button onclick="window.initiateConnection()" id="connect-btn" disabled class="w-full bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-transparent font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm">
+                    <i class="ph-bold ph-link-simple text-lg"></i> Connect Securely
                 </button>
             </div>
         </div>
 
-        <!-- ================= ACTIVE VIEW ================= -->
         <div id="active-view" class="w-full flex-col gap-6 hidden w-full">
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between slide-up">
                 <div class="flex items-center gap-4">
@@ -186,16 +173,15 @@
                     </div>
                     <div>
                         <p class="text-zinc-400 text-sm font-medium">E2EE Secured Connection</p>
-                        <p class="text-white font-mono font-bold text-lg" id="connected-id-display">...</p>
+                        <p class="text-white font-bold text-lg" id="connected-id-display">...</p>
                     </div>
                 </div>
-                <button onclick="disconnect()" class="px-4 py-2 bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-transparent hover:border-red-500/30 rounded-xl transition-all text-sm font-bold flex items-center gap-2">
+                <button onclick="window.disconnect()" class="px-4 py-2 bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-transparent hover:border-red-500/30 rounded-xl transition-all text-sm font-bold flex items-center gap-2">
                     <i class="ph-bold ph-power"></i> Disconnect
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full slide-up" style="animation-delay: 0.1s;">
-                <!-- Drop Zone -->
                 <div id="drop-zone" class="glass-panel border-2 border-dashed border-white/10 hover:border-blue-500/50 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center min-h-[350px] transition-all duration-300 relative overflow-hidden group">
                     <div id="transfer-overlay" class="absolute inset-0 bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center p-8 hidden z-10">
                         <div class="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
@@ -220,13 +206,12 @@
                     <h3 class="text-xl font-bold text-white mb-2">Send Files</h3>
                     <p class="text-zinc-400 text-sm mb-8 max-w-[200px]">Drag & drop multiple files to beam them securely.</p>
                     
-                    <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
+                    <input type="file" id="file-input" class="hidden" multiple onchange="window.handleFileSelect(event)">
                     <button onclick="document.getElementById('file-input').click()" class="bg-white text-zinc-900 hover:bg-zinc-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] px-8 py-3 rounded-xl font-bold transition-all duration-300">
                         Browse Files
                     </button>
                 </div>
 
-                <!-- Received Files Area -->
                 <div class="glass-panel rounded-[2rem] p-6 flex flex-col min-h-[350px] transition-all duration-500 border border-white/10">
                     <h3 class="text-zinc-400 text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
                         Inbox
@@ -243,12 +228,17 @@
         </div>
     </main>
 
-    <script>
-        const CHUNK_SIZE = 256 * 1024; 
+    <script type="module">
+        // Import Firebase for Real-time Radar capabilities
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const CHUNK_SIZE = 256 * 1024; // 256KB for robust transferring
         
         let peer = null;
         let activeConn = null;
-        let pendingConn = null; // Holds connection waiting for approval
+        let pendingConn = null;
         let myPin = '';
         let wakeLock = null;
         
@@ -256,10 +246,123 @@
         let isTransferring = false;
         let transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null };
 
-        // --- Core App Init ---
+        // Firebase / Radar instances
+        let db, auth, appId;
+
+        function getDeviceName() {
+            const ua = navigator.userAgent;
+            if (/iPad|Macintosh.*(?=Mac OS X.*Mobile)/.test(ua)) return 'Apple iPad';
+            if (/Mac OS X/.test(ua)) return 'Apple Mac';
+            if (/Android/.test(ua)) return 'Android Device';
+            if (/iPhone/.test(ua)) return 'Apple iPhone';
+            if (/Windows/.test(ua)) return 'Windows PC';
+            return 'Unknown Device';
+        }
+
+        async function initRadarService(pin) {
+            try {
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'webdrop-local';
+                const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                
+                if (!config) {
+                    document.getElementById('radar-status-text').innerText = 'Radar Offline (Manual PIN Only)';
+                    return; // Graceful fallback if deployed outside environment
+                }
+
+                const app = initializeApp(config);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 1. Authenticate FIRST per rules
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (token) await signInWithCustomToken(auth, token);
+                else await signInAnonymously(auth);
+
+                // 2. Fetch Public IP for room matching
+                let myIp = 'unknown';
+                try {
+                    const res = await fetch('https://api.ipify.org?format=json');
+                    myIp = (await res.json()).ip;
+                } catch(e) {}
+
+                // 3. Register device presence
+                const presenceRef = doc(db, 'artifacts', appId, 'public', 'data', 'radar_devices', pin);
+                await setDoc(presenceRef, {
+                    peerId: pin,
+                    ip: myIp,
+                    deviceName: getDeviceName(),
+                    timestamp: Date.now()
+                });
+
+                window.addEventListener('beforeunload', () => deleteDoc(presenceRef));
+
+                // 4. Listen for other devices on the same IP
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'radar_devices');
+                onSnapshot(colRef, (snapshot) => {
+                    const peers = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Filter in memory (Rule compliant)
+                        if (data.ip === myIp && data.peerId !== pin) {
+                            // Only show if active in last 5 minutes
+                            if (Date.now() - data.timestamp < 300000) {
+                                peers.push(data);
+                            }
+                        }
+                    });
+                    renderRadarUI(peers);
+                }, (err) => console.error(err));
+
+            } catch (err) {
+                console.warn("Radar init failed:", err);
+            }
+        }
+
+        function renderRadarUI(peers) {
+            const container = document.getElementById('radar-devices-container');
+            const statusEl = document.getElementById('radar-status-text');
+            container.innerHTML = '';
+            
+            if(peers.length === 0) {
+                statusEl.innerText = 'Radar Scanning...';
+                return;
+            }
+            
+            statusEl.innerText = `Radar Found ${peers.length} Nearby Device(s)`;
+            
+            peers.forEach((peer, i) => {
+                const angle = (i / peers.length) * Math.PI * 2;
+                const radius = 80;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                const btn = document.createElement('button');
+                btn.className = 'absolute bg-black/40 hover:bg-blue-600/50 border border-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center justify-center transition-all hover:scale-110 z-20 shadow-lg';
+                btn.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                btn.style.top = '50%';
+                btn.style.left = '50%';
+                btn.onclick = () => {
+                    document.getElementById('target-id-input').value = peer.peerId;
+                    window.initiateConnection();
+                };
+                
+                let iconClass = 'ph-device-mobile';
+                if(peer.deviceName.includes('Mac') || peer.deviceName.includes('PC')) iconClass = 'ph-laptop';
+                else if(peer.deviceName.includes('iPad')) iconClass = 'ph-tablet';
+
+                btn.innerHTML = `
+                    <i class="ph-fill ${iconClass} text-2xl text-blue-400 mb-1"></i>
+                    <span class="text-[10px] text-white font-bold w-16 truncate text-center">${peer.deviceName}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
         function initApp() {
             myPin = Math.floor(10000 + Math.random() * 90000).toString();
             document.getElementById('my-id-display').innerText = myPin;
+
+            initRadarService(myPin); // Boot up real-time discovery
 
             peer = new Peer(myPin, {
                 debug: 2,
@@ -271,111 +374,90 @@
                 }
             });
 
-            peer.on('open', () => {
-                updateAppStatus('online', 'Radar Active');
-                checkUrlForAutoConnect();
-            });
+            peer.on('open', () => updateAppStatus('online', 'Radar Active'));
 
-            // Security Layer: Intercept incoming connections
             peer.on('connection', (connection) => {
                 if (activeConn && activeConn.open) {
-                    connection.close(); // Reject if already busy
+                    connection.close();
                     return;
                 }
-                
-                // Do not auto-accept. Show the security modal.
+                const deviceName = connection.metadata?.deviceName || 'Unknown Device';
                 pendingConn = connection;
-                showSecurityModal(connection.peer);
+                showSecurityModal(connection.peer, deviceName);
             });
 
-            peer.on('error', (err) => {
-                if (err.type === 'peer-unavailable') { alertToast('Radar could not locate this PIN. Ensure the app is open.', 'error'); } 
-                else { updateAppStatus('error', 'Network Error'); }
-            });
-            
+            peer.on('error', (err) => updateAppStatus('error', 'Network Error'));
             setupDragAndDrop();
         }
 
-        // --- Security Gateway Logic ---
-        function showSecurityModal(peerId) {
+        function showSecurityModal(peerId, deviceName) {
+            document.getElementById('incoming-device-name').innerText = deviceName;
             document.getElementById('incoming-device-id').innerText = peerId;
             const overlay = document.getElementById('security-modal-overlay');
             overlay.classList.remove('hidden');
-            
-            // Trigger animation frame for smooth opacity transition
             requestAnimationFrame(() => {
                 overlay.classList.remove('opacity-0');
                 document.getElementById('security-modal-card').classList.remove('scale-95');
             });
         }
 
-        function hideSecurityModal() {
+        window.acceptConnection = () => {
             const overlay = document.getElementById('security-modal-overlay');
             overlay.classList.add('opacity-0');
             document.getElementById('security-modal-card').classList.add('scale-95');
-            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
-        }
+            setTimeout(() => { 
+                overlay.classList.add('hidden'); 
+                if(pendingConn) setupActiveConnection(pendingConn);
+            }, 300);
+        };
 
-        function acceptConnection() {
-            hideSecurityModal();
-            if(pendingConn) {
-                setupActiveConnection(pendingConn);
-            }
-        }
+        window.declineConnection = () => {
+            const overlay = document.getElementById('security-modal-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => { 
+                overlay.classList.add('hidden'); 
+                if(pendingConn) {
+                    pendingConn.close();
+                    pendingConn = null;
+                }
+            }, 300);
+        };
 
-        function declineConnection() {
-            hideSecurityModal();
-            if(pendingConn) {
-                pendingConn.close();
-                pendingConn = null;
-                alertToast('Connection declined securely.', 'info');
-            }
-        }
-
-        // --- Connection Management ---
-        function initiateConnection() {
+        window.initiateConnection = () => {
             const targetPin = document.getElementById('target-id-input').value.trim();
             if (targetPin.length !== 5) return;
             
             updateAppStatus('connecting', 'Negotiating Handshake...');
-            const connection = peer.connect(targetPin, { reliable: true });
-            
-            // Note: On the sender side, we just wait for the receiver to hit "Accept"
-            connection.on('open', () => {
-                setupActiveConnection(connection);
+            const connection = peer.connect(targetPin, { 
+                reliable: true,
+                metadata: { deviceName: getDeviceName() }
             });
             
-            connection.on('error', () => {
-                alertToast('Handshake failed or was declined.', 'error');
-                updateAppStatus('online', 'Radar Active');
-            });
+            connection.on('open', () => setupActiveConnection(connection));
+            connection.on('error', () => updateAppStatus('online', 'Radar Active'));
         }
 
         function setupActiveConnection(connection) {
             activeConn = connection;
             pendingConn = null;
             
-            alertToast('Secure tunnel established.', 'success');
             updateAppStatus('connected', 'Secured');
-            
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('setup-view').classList.remove('flex');
             
             const activeView = document.getElementById('active-view');
             activeView.classList.remove('hidden');
             activeView.classList.add('flex', 'fade-in');
-            document.getElementById('connected-id-display').innerText = activeConn.peer;
+            
+            const peerName = activeConn.metadata?.deviceName || activeConn.peer;
+            document.getElementById('connected-id-display').innerText = peerName;
 
             activeConn.on('data', handleIncomingData);
-            activeConn.on('close', handleDisconnect);
+            activeConn.on('close', window.disconnect);
         }
 
-        function disconnect() {
+        window.disconnect = () => {
             if (activeConn) activeConn.close();
-            handleDisconnect();
-        }
-
-        function handleDisconnect() {
             activeConn = null;
             isTransferring = false;
             fileQueue = [];
@@ -390,11 +472,9 @@
             const setupView = document.getElementById('setup-view');
             setupView.classList.remove('hidden');
             setupView.classList.add('flex', 'fade-in');
-            
             document.getElementById('target-id-input').value = '';
-        }
+        };
 
-        // --- Utilities ---
         function updateAppStatus(status, text) {
             const dot = document.getElementById('status-dot');
             const txt = document.getElementById('status-text');
@@ -409,21 +489,160 @@
             if(connectBtn) connectBtn.disabled = status !== 'online';
         }
 
-        function alertToast(msg, type) { /* ... omitted for brevity in code snippet, retains previous styling ... */ }
-        function copyInviteLink() { /* ... */ }
-        function checkUrlForAutoConnect() { /* ... */ }
+        window.handleFileSelect = (e) => {
+            if(e.target.files.length) enqueueFiles(Array.from(e.target.files));
+            e.target.value = '';
+        }
 
-        // --- Data Transfer Core (Identical to previous robust logic) ---
-        function handleFileSelect(e) { if(e.target.files.length) enqueueFiles(Array.from(e.target.files)); e.target.value = ''; }
-        function setupDragAndDrop() { /* Drag drop handlers */ }
-        function enqueueFiles(files) { /* Queue logic */ }
-        function processNextFile() { /* Chunking read */ }
-        function sendNextChunk() { /* ... */ }
-        function handleIncomingData(data) { /* ... */ }
-        function assembleAndDownloadReceivedFile() { /* ... */ }
-        
-        async function requestWakeLock() { if ('wakeLock' in navigator && !wakeLock) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } }
-        function releaseWakeLock() { if (wakeLock) { wakeLock.release().then(() => { wakeLock = null; }); } }
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            if (!dropZone) return;
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    if (activeConn && activeConn.open) dropZone.classList.add('drag-active');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                if (activeConn && activeConn.open && e.dataTransfer.files.length > 0) {
+                    enqueueFiles(Array.from(e.dataTransfer.files));
+                }
+            }, false);
+        }
+
+        function enqueueFiles(files) {
+            fileQueue.push(...files);
+            if (!isTransferring) processNextFile();
+        }
+
+        async function processNextFile() {
+            if (fileQueue.length === 0) {
+                isTransferring = false;
+                document.getElementById('transfer-overlay').classList.add('hidden');
+                releaseWakeLock();
+                return;
+            }
+
+            requestWakeLock();
+            isTransferring = true;
+            const file = fileQueue.shift();
+            
+            transferState = { role: 'sender', file: file, offset: 0, reader: new FileReader() };
+            showTransferUI('sender', file.name, fileQueue.length);
+
+            activeConn.send(JSON.stringify({ type: 'meta', name: file.name, size: file.size, mime: file.type }));
+        }
+
+        function sendNextChunk() {
+            const state = transferState;
+            if (state.offset >= state.file.size) {
+                activeConn.send(JSON.stringify({ type: 'eof' }));
+                setTimeout(processNextFile, 500);
+                return;
+            }
+            const slice = state.file.slice(state.offset, state.offset + CHUNK_SIZE);
+            state.reader.onload = (e) => {
+                activeConn.send(e.target.result);
+                state.offset += slice.size;
+                updateTransferProgress(state.offset, state.file.size);
+            };
+            state.reader.readAsArrayBuffer(slice);
+        }
+
+        function handleIncomingData(data) {
+            if (typeof data === 'string') {
+                const msg = JSON.parse(data);
+                if (msg.type === 'meta') {
+                    requestWakeLock();
+                    transferState = { role: 'receiver', receivedBuffers: [], receivedBytes: 0, meta: msg };
+                    showTransferUI('receiver', msg.name, 0);
+                    activeConn.send(JSON.stringify({ type: 'ack' }));
+                } else if (msg.type === 'ack') {
+                    sendNextChunk();
+                } else if (msg.type === 'eof') {
+                    assembleAndDownloadReceivedFile();
+                }
+            } else {
+                const state = transferState;
+                if (!state.meta) return;
+                state.receivedBuffers.push(data);
+                state.receivedBytes += data.byteLength;
+                updateTransferProgress(state.receivedBytes, state.meta.size);
+                activeConn.send(JSON.stringify({ type: 'ack' }));
+            }
+        }
+
+        function assembleAndDownloadReceivedFile() {
+            const state = transferState;
+            const blob = new Blob(state.receivedBuffers, { type: state.meta.mime });
+            addFileToHistory(blob, state.meta.name, state.meta.size);
+            updateTransferProgress(1, 1);
+            
+            setTimeout(() => {
+                document.getElementById('transfer-overlay').classList.add('hidden');
+                releaseWakeLock();
+            }, 500);
+        }
+
+        function showTransferUI(role, filename, queueLeft) {
+            const overlay = document.getElementById('transfer-overlay');
+            overlay.classList.remove('hidden');
+            document.getElementById('transfer-filename').innerText = filename;
+            document.getElementById('transfer-title').innerText = role === 'sender' ? 'Sending File' : 'Receiving File';
+            
+            const qEl = document.getElementById('queue-status');
+            if (queueLeft > 0) { qEl.classList.remove('hidden'); qEl.innerText = `Queue: ${queueLeft} remaining`; } 
+            else { qEl.classList.add('hidden'); }
+            
+            updateTransferProgress(0, 1);
+        }
+
+        function updateTransferProgress(current, total) {
+            const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+            document.getElementById('transfer-percent').innerText = `${percent}%`;
+            document.getElementById('transfer-progress-bar').style.width = `${percent}%`;
+        }
+
+        function addFileToHistory(blob, filename, size) {
+            const list = document.getElementById('received-list');
+            const empty = document.getElementById('empty-received');
+            const count = document.getElementById('received-count');
+            if (empty) empty.remove();
+
+            const url = URL.createObjectURL(blob);
+            const item = document.createElement('div');
+            item.className = 'bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between group hover:bg-white/10 transition-colors fade-in';
+            item.innerHTML = `
+                <div class="flex items-center gap-4 overflow-hidden">
+                    <div class="bg-black/30 p-2.5 rounded-lg shrink-0"><i class="ph-fill ph-file text-2xl text-blue-400"></i></div>
+                    <div class="truncate">
+                        <p class="text-white font-medium text-sm truncate mb-0.5">${filename}</p>
+                        <p class="text-zinc-500 text-xs">${(size / (1024*1024)).toFixed(2)} MB</p>
+                    </div>
+                </div>
+                <a href="${url}" download="${filename}" class="shrink-0 p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors ml-2"><i class="ph-bold ph-download-simple text-lg"></i></a>
+            `;
+            list.insertBefore(item, list.firstChild);
+            count.innerText = parseInt(count.innerText) + 1;
+
+            const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+        }
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator && !wakeLock) {
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+        }
+        function releaseWakeLock() {
+            if (wakeLock) { wakeLock.release().then(() => { wakeLock = null; }); }
+        }
+
+        window.copyInviteLink = () => navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?c=${myPin}`);
 
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
