@@ -41,7 +41,7 @@
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        /* Sweeping Radar Animation */
+        /* Centered Sweeping Radar Animation */
         #radar-container {
             border-radius: 50%;
             overflow: hidden;
@@ -53,27 +53,26 @@
 
         .radar-scanner {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent 70%, rgba(59, 130, 246, 0.6) 100%);
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            background: conic-gradient(from 0deg, transparent 75%, rgba(59, 130, 246, 0.4) 100%);
             border-radius: 50%;
-            transform-origin: center;
-            animation: radar-spin 4s linear infinite;
+            animation: radar-spin 3s linear infinite;
             pointer-events: none;
-            translate: -50% -50%;
             z-index: 5;
         }
 
         @keyframes radar-spin {
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .radar-ping {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100px; height: 100px; border-radius: 50%;
-            border: 1px solid rgba(59, 130, 246, 0.6);
+            position: absolute; 
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.6);
             animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
             pointer-events: none;
             z-index: 1;
@@ -82,8 +81,8 @@
         .radar-ping:nth-child(3) { animation-delay: 2s; }
 
         @keyframes ping {
-            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; border-width: 2px; }
-            100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; border-width: 0px; }
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(25); opacity: 0; border-width: 0px; }
         }
 
         #security-modal-overlay { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
@@ -262,10 +261,9 @@
         </div>
     </main>
 
-    <!-- FIREBASE AND APP LOGIC -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
         const CHUNK_SIZE = 256 * 1024;
         
@@ -273,6 +271,7 @@
         let activeConn = null;
         let pendingConn = null;
         let myPin = '';
+        let myDeviceId = '';
         let wakeLock = null;
         let fileQueue = [];
         let isTransferring = false;
@@ -281,18 +280,25 @@
         let db;
         let radarInterval;
 
-        // --- USER'S FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
             authDomain: "webdrop-ca210.firebaseapp.com",
             projectId: "webdrop-ca210",
             storageBucket: "webdrop-ca210.firebasestorage.app",
             messagingSenderId: "847573409539",
-            appId: "1:847573409539:web:1d2e76ca059916399ed336",
-            measurementId: "G-0K60F2FQS7"
+            appId: "1:847573409539:web:1d2e76ca059916399ed336"
         };
 
-        // Identifies the local device type for accurate icons
+        // Get or create a persistent Device ID so refresh doesn't show ghost self
+        function getOrCreateDeviceId() {
+            let id = localStorage.getItem('webdrop_device_id');
+            if (!id) {
+                id = Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('webdrop_device_id', id);
+            }
+            return id;
+        }
+
         function getDeviceName() {
             const ua = navigator.userAgent;
             if (/iPad/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document)) return 'Apple iPad';
@@ -303,7 +309,6 @@
             return 'Unknown Device';
         }
 
-        // Maps device name to the correct Phosphor icon
         function getIconForDevice(deviceName) {
             if(deviceName.includes('Mac') || deviceName.includes('Windows')) return { icon: 'ph-laptop', color: 'text-purple-400' };
             if(deviceName.includes('iPad') || deviceName.includes('Tablet')) return { icon: 'ph-device-tablet', color: 'text-green-400' };
@@ -313,63 +318,59 @@
 
         async function initRadarService(pin) {
             const statusEl = document.getElementById('radar-status-text');
+            myDeviceId = getOrCreateDeviceId();
+            
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
 
-                // Fetch Public IP
                 let myIp = 'local_fallback';
                 try {
                     const res = await fetch('https://api.ipify.org?format=json');
                     myIp = (await res.json()).ip;
                 } catch(e) { console.warn("IP fetch blocked", e); }
-                window.myIp = myIp; // Store globally for the heartbeat
+                window.myIp = myIp;
 
                 const presenceRef = doc(db, 'radar_devices', String(pin));
                 
-                // 1. Initial write
-                await setDoc(presenceRef, {
-                    peerId: String(pin),
-                    ip: myIp,
-                    deviceName: getDeviceName(),
-                    timestamp: Date.now()
-                });
+                const updatePresence = () => {
+                    setDoc(presenceRef, {
+                        peerId: String(pin),
+                        deviceId: myDeviceId, // Crucial for filtering out our own ghosts
+                        ip: myIp,
+                        deviceName: getDeviceName(),
+                        timestamp: Date.now()
+                    }, { merge: true }).catch(()=>{});
+                };
+                
+                updatePresence();
+                radarInterval = setInterval(updatePresence, 4000);
 
-                // 2. Heartbeat (keep alive every 5s)
-                radarInterval = setInterval(() => {
-                    setDoc(presenceRef, { timestamp: Date.now() }, { merge: true }).catch(()=>{});
-                }, 5000);
+                // Instantly remove from database when user leaves or refreshes
+                window.addEventListener('pagehide', () => { deleteDoc(presenceRef); });
+                window.addEventListener('beforeunload', () => { deleteDoc(presenceRef); });
 
-                // 3. Cleanup immediately on close/refresh (Fixes Ghost Devices)
-                window.addEventListener('beforeunload', () => {
-                    clearInterval(radarInterval);
-                    deleteDoc(presenceRef);
-                });
-
-                // 4. Listen for other devices on the same IP
                 const colRef = collection(db, 'radar_devices');
                 onSnapshot(colRef, (snapshot) => {
                     const peers = [];
                     const now = Date.now();
                     snapshot.forEach(document => {
                         const data = document.data();
-                        // CRITICAL: Must be same IP, NOT our own PIN, and active within last 15 seconds
-                        if (data.ip === myIp && String(data.peerId) !== String(pin)) {
-                            if (now - data.timestamp < 15000) { 
+                        // MUST be same IP, MUST NOT be our own unique device ID, and active in last 12 seconds
+                        if (data.ip === myIp && data.deviceId !== myDeviceId) {
+                            if (now - data.timestamp < 12000) { 
                                 peers.push(data);
                             }
                         }
                     });
                     renderRadarUI(peers);
                 }, (err) => {
-                    console.error("Firestore Error:", err);
-                    statusEl.innerText = `Radar Error: ${err.message}`;
+                    statusEl.innerText = `Radar Permissions Error: ${err.message}`;
                     statusEl.classList.add('text-red-400');
                 });
 
             } catch (err) {
-                console.error("Radar Init Error:", err);
-                statusEl.innerText = `Radar Error: ${err.message}`;
+                statusEl.innerText = `Radar Offline: ${err.message}`;
                 statusEl.classList.add('text-red-400');
             }
         }
@@ -389,7 +390,7 @@
             
             peers.forEach((peerData, i) => {
                 const angle = (i / peers.length) * Math.PI * 2;
-                const radius = 100; // Distance from center
+                const radius = 100;
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
                 
