@@ -8,7 +8,6 @@
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
@@ -20,6 +19,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
         
+        /* Liquid Glass Background */
         .blob-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: -1; pointer-events: none; background: #09090b; }
         .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5; animation: float 20s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         .blob-1 { background: #3b82f6; width: 45vw; height: 45vw; max-width: 500px; max-height: 500px; top: -10%; left: -10%; }
@@ -41,19 +41,49 @@
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
+        /* Sweeping Radar Animation */
+        #radar-container {
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .radar-scanner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(59, 130, 246, 0.6) 100%);
+            border-radius: 50%;
+            transform-origin: center;
+            animation: radar-spin 4s linear infinite;
+            pointer-events: none;
+            translate: -50% -50%;
+            z-index: 5;
+        }
+
+        @keyframes radar-spin {
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .radar-ping {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 100px; height: 100px; border-radius: 50%;
-            border: 2px solid rgba(59, 130, 246, 0.5);
-            animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+            border: 1px solid rgba(59, 130, 246, 0.6);
+            animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
             pointer-events: none;
+            z-index: 1;
         }
-        .radar-ping:nth-child(2) { animation-delay: 0.8s; }
-        .radar-ping:nth-child(3) { animation-delay: 1.6s; }
+        .radar-ping:nth-child(2) { animation-delay: 1s; }
+        .radar-ping:nth-child(3) { animation-delay: 2s; }
 
         @keyframes ping {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; border-width: 4px; }
-            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; border-width: 1px; }
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; border-width: 2px; }
+            100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; border-width: 0px; }
         }
 
         #security-modal-overlay { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
@@ -86,8 +116,11 @@
             
             <div class="bg-black/30 rounded-xl p-4 mb-8 border border-white/5">
                 <p class="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-1">Attempting to connect</p>
-                <p class="text-white text-lg font-bold truncate" id="incoming-device-name">Unknown Device</p>
-                <p class="text-zinc-500 font-mono text-sm mt-1">PIN: <span id="incoming-device-id">UNKNOWN</span></p>
+                <div class="flex items-center justify-center gap-2 mb-1">
+                    <i id="incoming-device-icon" class="ph-fill ph-device-mobile text-xl text-blue-400"></i>
+                    <p class="text-white text-lg font-bold truncate" id="incoming-device-name">Unknown Device</p>
+                </div>
+                <p class="text-zinc-500 font-mono text-xs mt-1">PIN: <span id="incoming-device-id">UNKNOWN</span></p>
             </div>
 
             <div class="flex gap-4">
@@ -126,17 +159,18 @@
                 
                 <h2 id="radar-status-text" class="text-zinc-400 text-xs font-bold tracking-widest uppercase mb-12">Radar Scanning...</h2>
                 
-                <div class="relative w-48 h-48 mx-auto mb-12" id="radar-container">
+                <div class="relative w-64 h-64 mx-auto mb-12" id="radar-container">
                     <div class="radar-ping"></div>
                     <div class="radar-ping"></div>
                     <div class="radar-ping"></div>
+                    <div class="radar-scanner"></div>
                     
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full w-16 h-16 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] z-10">
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full w-16 h-16 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] z-20">
                         <i class="ph-fill ph-radar text-2xl text-white"></i>
                     </div>
                     
                     <!-- Real-time Discovered Devices will be injected here -->
-                    <div id="radar-devices-container" class="absolute inset-0 z-20"></div>
+                    <div id="radar-devices-container" class="absolute inset-0 z-30 pointer-events-none"></div>
                 </div>
 
                 <div class="bg-black/30 rounded-2xl p-4 border border-white/5 mb-6">
@@ -167,7 +201,7 @@
                 <div class="flex items-center gap-4">
                     <div class="relative">
                         <div class="bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-3 rounded-xl border border-green-500/30">
-                            <i class="ph-fill ph-lock-key text-2xl text-green-400"></i>
+                            <i id="connected-device-icon" class="ph-fill ph-lock-key text-2xl text-green-400"></i>
                         </div>
                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-zinc-900 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
                     </div>
@@ -228,47 +262,59 @@
         </div>
     </main>
 
+    <!-- FIREBASE AND APP LOGIC -->
     <script type="module">
-        // Import correct version based on user setup
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-        const CHUNK_SIZE = 256 * 1024; // 256KB chunks
+        const CHUNK_SIZE = 256 * 1024;
         
         let peer = null;
         let activeConn = null;
         let pendingConn = null;
         let myPin = '';
         let wakeLock = null;
-        
         let fileQueue = [];
         let isTransferring = false;
         let transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null };
+        
         let db;
+        let radarInterval;
 
+        // --- USER'S FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
+            authDomain: "webdrop-ca210.firebaseapp.com",
+            projectId: "webdrop-ca210",
+            storageBucket: "webdrop-ca210.firebasestorage.app",
+            messagingSenderId: "847573409539",
+            appId: "1:847573409539:web:1d2e76ca059916399ed336",
+            measurementId: "G-0K60F2FQS7"
+        };
+
+        // Identifies the local device type for accurate icons
         function getDeviceName() {
             const ua = navigator.userAgent;
-            if (/iPad|Macintosh.*(?=Mac OS X.*Mobile)/.test(ua)) return 'Apple iPad';
+            if (/iPad/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document)) return 'Apple iPad';
             if (/Mac OS X/.test(ua)) return 'Apple Mac';
-            if (/Android/.test(ua)) return 'Android Device';
             if (/iPhone/.test(ua)) return 'Apple iPhone';
+            if (/Android/.test(ua)) return 'Android Device';
             if (/Windows/.test(ua)) return 'Windows PC';
             return 'Unknown Device';
         }
 
+        // Maps device name to the correct Phosphor icon
+        function getIconForDevice(deviceName) {
+            if(deviceName.includes('Mac') || deviceName.includes('Windows')) return { icon: 'ph-laptop', color: 'text-purple-400' };
+            if(deviceName.includes('iPad') || deviceName.includes('Tablet')) return { icon: 'ph-device-tablet', color: 'text-green-400' };
+            if(deviceName.includes('iPhone') || deviceName.includes('Android')) return { icon: 'ph-device-mobile', color: 'text-blue-400' };
+            return { icon: 'ph-desktop', color: 'text-zinc-400' };
+        }
+
         async function initRadarService(pin) {
+            const statusEl = document.getElementById('radar-status-text');
             try {
-                const config = {
-                    apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
-                    authDomain: "webdrop-ca210.firebaseapp.com",
-                    projectId: "webdrop-ca210",
-                    storageBucket: "webdrop-ca210.firebasestorage.app",
-                    messagingSenderId: "847573409539",
-                    appId: "1:847573409539:web:1d2e76ca059916399ed336",
-                    measurementId: "G-0K60F2FQS7"
-                };
-                
-                const app = initializeApp(config);
+                const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
 
                 // Fetch Public IP
@@ -276,41 +322,55 @@
                 try {
                     const res = await fetch('https://api.ipify.org?format=json');
                     myIp = (await res.json()).ip;
-                } catch(e) { console.warn("IP fetch blocked, using fallback", e); }
+                } catch(e) { console.warn("IP fetch blocked", e); }
+                window.myIp = myIp; // Store globally for the heartbeat
 
-                // Register device - simplified path to avoid complex rule issues
-                const presenceRef = doc(db, 'radar_devices', pin);
+                const presenceRef = doc(db, 'radar_devices', String(pin));
+                
+                // 1. Initial write
                 await setDoc(presenceRef, {
-                    peerId: pin,
+                    peerId: String(pin),
                     ip: myIp,
                     deviceName: getDeviceName(),
                     timestamp: Date.now()
                 });
 
-                window.addEventListener('beforeunload', () => deleteDoc(presenceRef));
+                // 2. Heartbeat (keep alive every 5s)
+                radarInterval = setInterval(() => {
+                    setDoc(presenceRef, { timestamp: Date.now() }, { merge: true }).catch(()=>{});
+                }, 5000);
 
+                // 3. Cleanup immediately on close/refresh (Fixes Ghost Devices)
+                window.addEventListener('beforeunload', () => {
+                    clearInterval(radarInterval);
+                    deleteDoc(presenceRef);
+                });
+
+                // 4. Listen for other devices on the same IP
                 const colRef = collection(db, 'radar_devices');
                 onSnapshot(colRef, (snapshot) => {
                     const peers = [];
+                    const now = Date.now();
                     snapshot.forEach(document => {
                         const data = document.data();
-                        if (data.ip === myIp && data.peerId !== pin) {
-                            if (Date.now() - data.timestamp < 300000) {
+                        // CRITICAL: Must be same IP, NOT our own PIN, and active within last 15 seconds
+                        if (data.ip === myIp && String(data.peerId) !== String(pin)) {
+                            if (now - data.timestamp < 15000) { 
                                 peers.push(data);
                             }
                         }
                     });
                     renderRadarUI(peers);
                 }, (err) => {
-                    console.error("Firestore Listen Error:", err);
-                    document.getElementById('radar-status-text').innerText = 'Radar DB Error: ' + err.code;
-                    document.getElementById('radar-status-text').classList.add('text-red-400');
+                    console.error("Firestore Error:", err);
+                    statusEl.innerText = `Radar Error: ${err.message}`;
+                    statusEl.classList.add('text-red-400');
                 });
 
             } catch (err) {
                 console.error("Radar Init Error:", err);
-                document.getElementById('radar-status-text').innerText = 'Radar Failed: ' + (err.code || err.message).substring(0, 30);
-                document.getElementById('radar-status-text').classList.add('text-red-400');
+                statusEl.innerText = `Radar Error: ${err.message}`;
+                statusEl.classList.add('text-red-400');
             }
         }
 
@@ -321,35 +381,33 @@
             statusEl.classList.remove('text-red-400');
             
             if(peers.length === 0) {
-                statusEl.innerText = 'Radar Scanning...';
+                statusEl.innerText = 'Radar Scanning For Devices...';
                 return;
             }
             
             statusEl.innerText = `Radar Found ${peers.length} Nearby Device(s)`;
             
-            peers.forEach((peer, i) => {
+            peers.forEach((peerData, i) => {
                 const angle = (i / peers.length) * Math.PI * 2;
-                const radius = 80;
+                const radius = 100; // Distance from center
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
                 
                 const btn = document.createElement('button');
-                btn.className = 'absolute bg-black/40 hover:bg-blue-600/50 border border-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center justify-center transition-all hover:scale-110 z-20 shadow-lg fade-in';
+                btn.className = 'absolute bg-black/60 hover:bg-blue-600/50 border border-white/20 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center justify-center transition-all hover:scale-110 z-30 shadow-[0_10px_20px_rgba(0,0,0,0.5)] pointer-events-auto fade-in';
                 btn.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
                 btn.style.top = '50%';
                 btn.style.left = '50%';
                 btn.onclick = () => {
-                    document.getElementById('target-id-input').value = peer.peerId;
+                    document.getElementById('target-id-input').value = peerData.peerId;
                     window.initiateConnection();
                 };
                 
-                let iconClass = 'ph-device-mobile';
-                if(peer.deviceName.includes('Mac') || peer.deviceName.includes('PC')) iconClass = 'ph-laptop';
-                else if(peer.deviceName.includes('iPad')) iconClass = 'ph-tablet';
+                const deviceStyles = getIconForDevice(peerData.deviceName);
 
                 btn.innerHTML = `
-                    <i class="ph-fill ${iconClass} text-2xl text-blue-400 mb-1"></i>
-                    <span class="text-[10px] text-white font-bold w-16 truncate text-center">${peer.deviceName}</span>
+                    <i class="ph-fill ${deviceStyles.icon} text-3xl ${deviceStyles.color} mb-1 drop-shadow-[0_0_10px_currentColor]"></i>
+                    <span class="text-[10px] text-white font-bold w-16 truncate text-center">${peerData.deviceName}</span>
                 `;
                 container.appendChild(btn);
             });
@@ -388,8 +446,13 @@
         }
 
         function showSecurityModal(peerId, deviceName) {
+            const styles = getIconForDevice(deviceName);
             document.getElementById('incoming-device-name').innerText = deviceName;
             document.getElementById('incoming-device-id').innerText = peerId;
+            
+            const iconEl = document.getElementById('incoming-device-icon');
+            iconEl.className = `ph-fill ${styles.icon} text-xl ${styles.color}`;
+
             const overlay = document.getElementById('security-modal-overlay');
             overlay.classList.remove('hidden');
             requestAnimationFrame(() => {
@@ -448,6 +511,9 @@
             
             const peerName = activeConn.metadata?.deviceName || activeConn.peer;
             document.getElementById('connected-id-display').innerText = peerName;
+            
+            const styles = getIconForDevice(peerName);
+            document.getElementById('connected-device-icon').className = `ph-fill ${styles.icon} text-2xl ${styles.color}`;
 
             activeConn.on('data', handleIncomingData);
             activeConn.on('close', window.disconnect);
