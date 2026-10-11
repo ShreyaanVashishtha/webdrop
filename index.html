@@ -363,6 +363,7 @@
         
         let db;
         let radarInterval;
+        let forceRadarUpdate = null; // Added to trigger instant radar refresh on wake
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
@@ -427,6 +428,8 @@
                     }, { merge: true }).catch(()=>{});
                 };
                 
+                forceRadarUpdate = updatePresence; // Expose to the visibility handler
+
                 // Fast 2s heartbeat
                 updatePresence();
                 radarInterval = setInterval(updatePresence, 2000);
@@ -527,6 +530,14 @@
 
             peer.on('open', () => updateAppStatus('online', 'Ready'));
 
+            // Gracefully handle server disconnects without dying
+            peer.on('disconnected', () => {
+                if (peer && !peer.destroyed) {
+                    updateAppStatus('connecting', 'Reconnecting...');
+                    peer.reconnect(); // Attempt to restore connection
+                }
+            });
+
             peer.on('connection', (connection) => {
                 if (activeConn && activeConn.open) {
                     connection.close();
@@ -537,8 +548,41 @@
                 showSecurityModal(connection.peer, deviceName);
             });
 
-            peer.on('error', (err) => updateAppStatus('error', 'Network Error'));
+            peer.on('error', (err) => {
+                console.warn('PeerJS Error:', err);
+                if (err.type === 'peer-unavailable') {
+                    updateAppStatus('error', 'Device not found');
+                    setTimeout(() => { if (!activeConn) updateAppStatus('online', 'Ready'); }, 3000);
+                } else if (err.type === 'network' || err.type === 'server-error') {
+                    updateAppStatus('error', 'Network Error');
+                    // Automatically retry if it was a network drop
+                    setTimeout(() => {
+                        if (peer && !peer.destroyed && peer.disconnected) {
+                            peer.reconnect();
+                        }
+                    }, 3000);
+                } else {
+                    updateAppStatus('error', 'Connection Error');
+                }
+            });
+            
             setupDragAndDrop();
+            setupVisibilityHandler();
+        }
+
+        // New function to instantly recover when the window is maximized/brought to front
+        function setupVisibilityHandler() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    // If the connection dropped while minimized, wake it up
+                    if (peer && peer.disconnected && !peer.destroyed) {
+                        updateAppStatus('connecting', 'Waking up...');
+                        peer.reconnect();
+                    }
+                    // Instantly reappear on radar
+                    if (forceRadarUpdate) forceRadarUpdate();
+                }
+            });
         }
 
         function showSecurityModal(peerId, deviceName) {
