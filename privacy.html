@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - WebDrop</title>
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #050505; 
+            background-image: 
+                radial-gradient(circle at 15% 30%, rgba(30, 58, 138, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 70%, rgba(88, 28, 135, 0.15), transparent 25%);
+            background-attachment: fixed;
+            color: #f4f4f5; 
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(20, 20, 22, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="px-6 py-4 sticky top-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="bg-gradient-to-tr from-blue-600 to-blue-400 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                    <i class="ph-fill ph-paper-plane-tilt text-white text-lg"></i>
+                </div>
+                <span class="text-lg font-bold tracking-tight">WebDrop</span>
+            </a>
+            <a href="index.html" class="glass-btn text-zinc-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                <i class="ph-bold ph-arrow-left"></i> Back to App
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto p-6 w-full py-12">
+        <div class="glass-panel p-8 sm:p-12 space-y-8">
+            
+            <div class="border-b border-white/10 pb-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-3">
+                    <i class="ph-fill ph-shield-check text-sm"></i> Zero-Knowledge Architecture
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Privacy Policy</h1>
+                <p class="text-zinc-400 text-sm">Last updated: October 2026</p>
+            </div>
+
+            <div class="space-y-6 text-sm text-zinc-300 leading-relaxed">
+                
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-lock-key text-blue-400"></i> 1. Core Commitment: Zero Server Storage
+                    </h2>
+                    <p>
+                        WebDrop is engineered from the ground up as a <strong>direct peer-to-peer (P2P) file transfer system</strong>. We believe your personal files, photos, videos, and text snippets should never pass through or be retained on any central intermediary storage server.
+                    </p>
+                    <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-200 text-xs">
+                        <strong>Summary:</strong> Your files travel directly from device to device over encrypted WebRTC channels. WebDrop servers do not store, copy, analyze, or hold your files.
+                    </div>
+                </section>
+
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-shield-check text-emerald-400"></i> 2. End-to-End Encryption (E2EE)
+                    </h2>
+                    <p>
+                        All WebRTC data connections employ industry-standard DTLS/SCTP wire encryption. Furthermore, WebDrop implements application-layer <strong>Zero-Knowledge AES-256-GCM encryption</strong> powered by ephemeral <strong>ECDH (P-256)</strong> key exchange negotiated via the native Web Crypto API (<code class="text-blue-300 bg-white/5 px-1 py-0.5 rounded">crypto.subtle</code>).
+                    </p>
+                    <p>
+                        Cryptographic keys are created locally in your browser memory and discarded immediately upon disconnection. Intermediaries, network operators, or STUN signaling nodes cannot decrypt your file payload.
+                    </p>
+                </section>
+
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-radar text-purple-400"></i> 3. Ephemeral Signaling & Local Radar
+                    </h2>
+                    <p>
+                        To help devices discover each other without user accounts:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 pl-2 text-zinc-400">
+                        <li><strong>Presence Records:</strong> When radar mode is active, an ephemeral record containing your 5-digit PIN, public IP hash, and chosen device nickname is recorded in a Google Firebase Firestore database.</li>
+                        <li><strong>Automatic Expiration:</strong> Presence records automatically expire and self-delete after 6 seconds of inactivity and are explicitly removed when closing or reloading the browser tab.</li>
+                        <li><strong>No Identity Tracking:</strong> We do not log IP addresses, create user profiles, or link sessions to individuals.</li>
+                    </ul>
+                </section>
+
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-hard-drives text-teal-400"></i> 4. Local Storage & Client-Side Data
+                    </h2>
+                    <p>
+                        WebDrop utilizes client-side storage technologies strictly for local utility functions:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 pl-2 text-zinc-400">
+                        <li><code class="text-zinc-200 bg-white/5 px-1 py-0.5 rounded">localStorage</code>: Remembers your custom device name (<code class="text-zinc-200">webdrop_device_name</code>) and random ephemeral device ID.</li>
+                        <li><code class="text-zinc-200 bg-white/5 px-1 py-0.5 rounded">IndexedDB</code>: Temporarily caches files shared via the native PWA Web Share Target sheet until they are queued to a connected device.</li>
+                        <li><code class="text-zinc-200 bg-white/5 px-1 py-0.5 rounded">OPFS (Origin Private File System)</code>: Streams large incoming file chunks directly to local browser sandboxed storage to avoid memory exhaustion, automatically cleared upon download assembly or cancellation.</li>
+                    </ul>
+                </section>
+
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-eye-slash text-pink-400"></i> 5. Tracking, Cookies & Analytics
+                    </h2>
+                    <p>
+                        WebDrop does <strong>not</strong> use advertising cookies, third-party tracking pixels, invasive fingerprinting scripts, or cross-site behavioral telemetry.
+                    </p>
+                </section>
+
+                <section class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-arrows-split text-amber-400"></i> 6. Third-Party CDNs & Services
+                    </h2>
+                    <p>
+                        Static libraries (Tailwind CSS, PeerJS, Phosphor Icons, QRCode.js) and STUN servers are delivered via reputable global CDNs and Google STUN (<code class="text-zinc-300">stun.l.google.com:19302</code>). These services only receive standard HTTP headers required to serve the script assets and establish NAT traversal.
+                    </p>
+                </section>
+
+                <section class="space-y-3 pt-4 border-t border-white/10">
+                    <h2 class="text-lg font-semibold text-white">7. Open Source & Transparency</h2>
+                    <p>
+                        WebDrop is transparent and open source. You can inspect the complete source code, verify all cryptographic operations, or host your own instance by visiting our <a href="https://github.com/ShreyaanVashishtha/webdrop" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline inline-flex items-center gap-1">GitHub repository <i class="ph-bold ph-arrow-square-out text-xs"></i></a>.
+                    </p>
+                </section>
+
+            </div>
+
+            <div class="pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-500">
+                <span>&copy; 2026 WebDrop. Distributed under MIT License.</span>
+                <div class="flex items-center gap-4">
+                    <a href="terms.html" class="text-zinc-400 hover:text-white transition-colors">Terms of Service</a>
+                    <a href="index.html" class="text-blue-400 hover:underline">WebDrop Home</a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
