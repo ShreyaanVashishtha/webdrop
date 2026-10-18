@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WebDrop - Fast P2P Transfer</title>
     
+    <!-- PWA & Web Share Target Integration -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="theme-color" content="#050505">
+    
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -286,6 +292,72 @@
         </div>
     </div>
 
+    <!-- E2EE Verification Modal -->
+    <div id="e2ee-modal-overlay" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/70 backdrop-blur-md">
+        <div class="glass-panel p-6 w-full max-w-sm text-center transform scale-95 transition-transform duration-300" id="e2ee-modal-card">
+            <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <i class="ph-fill ph-shield-check text-3xl text-white"></i>
+            </div>
+            <h3 class="text-lg font-bold mb-1">Zero-Knowledge E2EE</h3>
+            <p class="text-xs text-zinc-400 mb-5">Hardware-accelerated AES-256-GCM encryption with ephemeral ECDH P-256 key exchange. No data can be inspected by intermediaries.</p>
+            
+            <div class="bg-black/40 border border-white/5 rounded-2xl p-4 mb-3">
+                <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 font-semibold">Safety Emoji Fingerprint</p>
+                <div id="e2ee-emoji-fingerprint" class="text-3xl tracking-widest py-1 flex items-center justify-center gap-2 select-all">
+                    🛡️ ⚡ 💎 🚀
+                </div>
+            </div>
+
+            <div class="bg-black/40 border border-white/5 rounded-2xl p-3.5 mb-5">
+                <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 font-semibold">Cryptographic Safety Numbers</p>
+                <div id="e2ee-numbers-fingerprint" class="font-mono text-sm tracking-wider text-emerald-400 font-bold select-all">
+                    ---- ---- ---- ----
+                </div>
+            </div>
+
+            <p class="text-[11px] text-zinc-500 mb-5">Compare these emojis or numbers with your peer. If they match, your connection is guaranteed to be direct and tamper-proof.</p>
+
+            <button onclick="window.closeE2eeModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-3 font-semibold text-xs transition-colors shadow-lg shadow-emerald-500/20">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Device / Expand Mesh Modal -->
+    <div id="add-peer-modal-overlay" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/70 backdrop-blur-md">
+        <div class="glass-panel p-6 w-full max-w-sm text-center transform scale-95 transition-transform duration-300" id="add-peer-modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                        <i class="ph-bold ph-plus-circle text-xl text-blue-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Add Device to Mesh</h3>
+                </div>
+                <button onclick="window.closeAddPeerModal()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-zinc-400 mb-4">Scan your QR code on another device or enter their 5-digit PIN to connect multiple devices simultaneously.</p>
+            
+            <div class="bg-white p-3.5 rounded-2xl mx-auto w-fit shadow-xl flex items-center justify-center mb-4">
+                <div id="add-peer-qrcode-canvas"></div>
+            </div>
+            
+            <div class="bg-black/30 border border-white/5 rounded-xl p-2.5 mb-4">
+                <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">Your Mesh PIN</p>
+                <p class="font-mono text-xl font-bold tracking-widest text-blue-400" id="add-peer-modal-pin">-----</p>
+            </div>
+
+            <div class="flex gap-2">
+                <input type="text" id="add-peer-input" maxlength="5" placeholder="Enter peer PIN" oninput="window.handleAddPeerPinInput(event)" onkeydown="if(event.key === 'Enter') window.connectAdditionalPeer()" class="flex-1 glass-input rounded-xl px-3 py-2 text-center text-sm font-mono placeholder:text-zinc-600">
+                <button onclick="window.connectAdditionalPeer()" id="add-peer-connect-btn" disabled class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors">
+                    Connect
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="px-6 py-4 sticky top-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/5">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
@@ -316,6 +388,22 @@
         <!-- ================= SETUP VIEW ================= -->
         <div id="setup-view" class="w-full max-w-md flex flex-col gap-6 slide-up mt-4">
             
+            <!-- Web Share Target Pending Banner (if opened from system share sheet) -->
+            <div id="pending-share-banner" class="glass-panel p-4 hidden items-center justify-between border-blue-500/30 bg-blue-500/10 slide-up">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-blue-500/20 text-blue-400 rounded-xl">
+                        <i class="ph-bold ph-share-network text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-semibold text-white" id="pending-share-title">Files Queued from Share Sheet</p>
+                        <p class="text-[11px] text-zinc-400" id="pending-share-desc">Connect with a peer to automatically beam.</p>
+                    </div>
+                </div>
+                <button onclick="window.clearPendingShareItems()" class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 glass-btn rounded-lg">
+                    Dismiss
+                </button>
+            </div>
+
             <!-- Radar Panel -->
             <div class="glass-panel p-8 w-full text-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-50"></div>
@@ -369,27 +457,44 @@
         </div>
 
         <!-- ================= ACTIVE VIEW ================= -->
-        <div id="active-view" class="w-full flex-col gap-6 hidden w-full mt-4">
+        <div id="active-view" class="w-full flex-col gap-5 hidden w-full mt-4">
             
-            <!-- Connection Status Panel -->
-            <div class="glass-panel p-4 flex items-center justify-between slide-up">
-                <div class="flex items-center gap-4">
+            <!-- Connection Status Panel & Room Controls -->
+            <div class="glass-panel p-4 flex flex-wrap items-center justify-between gap-4 slide-up">
+                <div class="flex items-center gap-3.5">
                     <div class="relative">
-                        <div class="bg-white/5 border border-white/10 p-3 rounded-xl">
-                            <i id="connected-device-icon" class="ph-fill ph-lock-key text-2xl text-blue-400"></i>
+                        <div class="bg-blue-500/10 border border-blue-500/20 p-2.5 rounded-xl">
+                            <i id="connected-device-icon" class="ph-fill ph-users-three text-2xl text-blue-400"></i>
                         </div>
                         <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#141416] rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
                     </div>
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
-                            <p class="text-[10px] font-semibold text-green-400 uppercase tracking-wider">E2EE Secured</p>
+                            <button onclick="window.openE2eeModal()" class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all text-[10px] font-semibold cursor-pointer group" title="Click to view E2EE verification numbers and emojis">
+                                <i class="ph-fill ph-shield-check text-xs group-hover:scale-110 transition-transform"></i>
+                                <span id="e2ee-badge-text">AES-256 E2EE</span>
+                                <i class="ph-bold ph-caret-right text-[9px] opacity-70"></i>
+                            </button>
                         </div>
-                        <p class="font-semibold text-lg" id="connected-id-display">...</p>
+                        <p class="font-semibold text-base sm:text-lg flex items-center gap-2" id="connected-id-display">Mesh Room</p>
                     </div>
                 </div>
-                <button onclick="window.disconnect()" class="glass-btn text-zinc-300 hover:text-red-400 hover:bg-red-500/10 px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium transition-colors">
-                    <i class="ph-bold ph-power"></i> Disconnect
-                </button>
+                
+                <div class="flex items-center gap-2.5">
+                    <button onclick="window.openAddPeerModal()" class="glass-btn text-blue-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-blue-500/30 hover:border-blue-500/60 transition-all">
+                        <i class="ph-bold ph-user-plus text-sm"></i> Add Device
+                    </button>
+                    <button onclick="window.disconnectAll()" class="glass-btn text-zinc-300 hover:text-red-400 hover:bg-red-500/10 px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-colors">
+                        <i class="ph-bold ph-power"></i> Leave Room
+                    </button>
+                </div>
+            </div>
+
+            <!-- Multi-Peer Mesh Selector Ribbon -->
+            <div class="glass-panel p-3 flex flex-col sm:flex-row items-center justify-between gap-3 slide-up" style="animation-delay: 0.05s;">
+                <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full" id="peer-chips-container">
+                    <!-- Injected dynamically: Broadcast to All + Device Chips -->
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full slide-up" style="animation-delay: 0.1s;">
@@ -440,7 +545,8 @@
                         <div class="bg-white/5 border border-white/10 p-5 rounded-2xl mb-4 group-hover:bg-blue-500/10 group-hover:border-blue-500/20 transition-all duration-300">
                             <i class="ph-fill ph-cloud-arrow-up text-4xl text-zinc-400 group-hover:text-blue-400 transition-colors"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-1">Send Files</h3>
+                        <h3 class="text-lg font-semibold mb-0.5">Send Files</h3>
+                        <p class="text-xs text-blue-400 font-semibold mb-1" id="drop-target-label">Recipient: All Devices</p>
                         <p class="text-xs text-zinc-500 mb-6 max-w-[200px]">Drag & drop files here, or click to browse.</p>
                         
                         <input type="file" id="file-input" class="hidden" multiple onchange="window.handleFileSelect(event)">
@@ -453,9 +559,12 @@
                     <div id="text-zone" class="glass-panel p-6 flex-col justify-between min-h-[400px] hidden">
                         <div class="flex-1 flex flex-col">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-xs font-semibold text-zinc-300 flex items-center gap-2 uppercase tracking-wider">
-                                    <i class="ph-bold ph-chat-text text-blue-400"></i> Beam Text or Link
-                                </h3>
+                                <div>
+                                    <h3 class="text-xs font-semibold text-zinc-300 flex items-center gap-2 uppercase tracking-wider">
+                                        <i class="ph-bold ph-chat-text text-blue-400"></i> Beam Text or Link
+                                    </h3>
+                                    <p class="text-[10px] text-blue-400 font-medium mt-0.5" id="text-target-label">Recipient: All Devices</p>
+                                </div>
                                 <button onclick="window.pasteFromClipboard()" class="glass-btn text-[11px] text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg flex items-center gap-1.5">
                                     <i class="ph-bold ph-clipboard"></i> Paste Clipboard
                                 </button>
@@ -501,21 +610,37 @@
         const LOW_WATER_MARK = 256 * 1024; // 256 KB low-water mark to resume streaming
         
         let peer = null;
-        let activeConn = null;
         let pendingConn = null;
         let myPin = '';
         let myDeviceId = '';
         let wakeLock = null;
         let fileQueue = [];
         let isTransferring = false;
-        let transferState = { role: null, file: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null };
+        let transferState = { role: null, file: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, senderPeerId: null };
         let metrics = { totalBytes: 0, lastSampleTime: 0, lastSampleBytes: 0, speed: 0 };
         let receivedItemsCount = 0;
         let opfsAvailable = false;
         
+        // Multi-Peer Mesh State
+        const meshPeers = new Map(); // key: peerId -> { id, conn, name, iconInfo, e2ee: { ready, key, numbers, emojis } }
+        let selectedTarget = 'all'; // 'all' or specific peerId
+
+        // PWA Web Share Target Pending Items
+        let pendingSharedFiles = [];
+        let pendingSharedText = '';
+
+        // E2EE Cryptographic Keypair & Emojis
+        let myEcdhKeyPair = null;
+        const EMOJI_DICTIONARY = [
+            '🛡️', '⚡', '💎', '🚀', '🔑', '🌟', '🛸', '🎯',
+            '🌊', '🔥', '🔮', '🍀', '🪐', '🦄', '🌈', '👑',
+            '🕊️', '🍒', '🔔', '✨', '🦊', '🐬', '🏆', '⚓',
+            '🧩', '🎨', '🧭', '💡', '🎵', '🔋', '🌞', '🌙'
+        ];
+
         let db;
         let radarInterval;
-        let forceRadarUpdate = null; // Added to trigger instant radar refresh on wake
+        let forceRadarUpdate = null;
 
         const firebaseConfig = {
             apiKey: "AIzaSyBKwmgScbzjfBPDzaGXftXhd4xvhAPaEPo",
@@ -524,6 +649,461 @@
             storageBucket: "webdrop-ca210.firebasestorage.app",
             messagingSenderId: "847573409539",
             appId: "1:847573409539:web:1d2e76ca059916399ed336"
+        };
+
+        // =========================================
+        // PWA & WEB SHARE TARGET (INDEXEDDB)
+        // =========================================
+        function openShareDB() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
+                const req = indexedDB.open('webdrop_pwa_share', 1);
+                req.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('shared_items')) {
+                        database.createObjectStore('shared_items', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function checkSharedTargetItems() {
+            try {
+                const dbInstance = await openShareDB();
+                const items = await new Promise((resolve, reject) => {
+                    const tx = dbInstance.transaction('shared_items', 'readonly');
+                    const store = tx.objectStore('shared_items');
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+
+                if (items && items.length > 0) {
+                    const clearTx = dbInstance.transaction('shared_items', 'readwrite');
+                    clearTx.objectStore('shared_items').clear();
+
+                    for (const item of items) {
+                        if (item.files && item.files.length > 0) {
+                            handleIncomingSharedFiles(item.files);
+                        }
+                        if (item.text || item.url) {
+                            const str = [item.text, item.url].filter(Boolean).join('\n');
+                            handleIncomingSharedText(str);
+                        }
+                    }
+                }
+            } catch (err) {
+                // Ignore if not present
+            }
+
+            if (window.location.search.includes('shared=true')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function handleIncomingSharedFiles(files) {
+            if (meshPeers.size > 0) {
+                enqueueFiles(files);
+                showToast(`Queued ${files.length} file(s) from system share sheet!`, 'success');
+            } else {
+                pendingSharedFiles.push(...files);
+                updatePendingShareBanner();
+                showToast(`Received ${files.length} file(s) from Share Sheet. Connect to beam!`, 'info');
+            }
+        }
+
+        function handleIncomingSharedText(text) {
+            const input = document.getElementById('share-text-input');
+            if (input) input.value = text;
+            if (meshPeers.size > 0) {
+                window.switchActiveTab('text');
+                showToast('Text loaded from system share sheet', 'info');
+            } else {
+                pendingSharedText = text;
+                updatePendingShareBanner();
+            }
+        }
+
+        function updatePendingShareBanner() {
+            const banner = document.getElementById('pending-share-banner');
+            if (!banner) return;
+            if (pendingSharedFiles.length > 0 || pendingSharedText) {
+                banner.classList.remove('hidden');
+                banner.classList.add('flex');
+                const title = document.getElementById('pending-share-title');
+                const desc = document.getElementById('pending-share-desc');
+                const count = pendingSharedFiles.length;
+                if (count > 0 && pendingSharedText) {
+                    title.innerText = `${count} file(s) & text ready to beam`;
+                } else if (count > 0) {
+                    title.innerText = `${count} file(s) ready to beam`;
+                } else {
+                    title.innerText = `Shared text ready to beam`;
+                }
+                desc.innerText = 'Queued from your system Share Sheet. Pair a device to beam.';
+            } else {
+                banner.classList.add('hidden');
+                banner.classList.remove('flex');
+            }
+        }
+
+        window.clearPendingShareItems = () => {
+            pendingSharedFiles = [];
+            pendingSharedText = '';
+            updatePendingShareBanner();
+            showToast('Cleared pending shared items', 'info');
+        };
+
+        function checkPendingSharedItemsForMesh() {
+            if (pendingSharedFiles.length > 0) {
+                enqueueFiles(pendingSharedFiles);
+                pendingSharedFiles = [];
+                updatePendingShareBanner();
+                showToast('Auto-beaming files queued from Share Sheet!', 'success');
+            }
+            if (pendingSharedText) {
+                window.switchActiveTab('text');
+                pendingSharedText = '';
+                updatePendingShareBanner();
+            }
+        }
+
+        // =========================================
+        // ZERO-KNOWLEDGE E2EE (AES-256-GCM + ECDH)
+        // =========================================
+        async function getOrCreateEcdhKeyPair() {
+            if (!myEcdhKeyPair) {
+                myEcdhKeyPair = await window.crypto.subtle.generateKey(
+                    { name: "ECDH", namedCurve: "P-256" },
+                    true,
+                    ["deriveKey", "deriveBits"]
+                );
+            }
+            return myEcdhKeyPair;
+        }
+
+        async function setupPeerE2EE(peerRecord) {
+            try {
+                const keyPair = await getOrCreateEcdhKeyPair();
+                const exportedPub = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
+                peerRecord.conn.send(JSON.stringify({
+                    type: 'e2ee_handshake',
+                    pubKey: Array.from(new Uint8Array(exportedPub))
+                }));
+            } catch (err) {
+                console.error('Failed to initiate E2EE handshake:', err);
+            }
+        }
+
+        async function handlePeerE2EEHandshake(peerRecord, pubKeyArray) {
+            try {
+                const keyPair = await getOrCreateEcdhKeyPair();
+                const remotePublicKey = await window.crypto.subtle.importKey(
+                    "raw",
+                    new Uint8Array(pubKeyArray),
+                    { name: "ECDH", namedCurve: "P-256" },
+                    true,
+                    []
+                );
+
+                const sharedBits = await window.crypto.subtle.deriveBits(
+                    { name: "ECDH", public: remotePublicKey },
+                    keyPair.privateKey,
+                    256
+                );
+
+                const aesKey = await window.crypto.subtle.importKey(
+                    "raw",
+                    sharedBits,
+                    { name: "AES-GCM" },
+                    false,
+                    ["encrypt", "decrypt"]
+                );
+
+                const digest = await window.crypto.subtle.digest("SHA-256", sharedBits);
+                const digestBytes = new Uint8Array(digest);
+
+                // 4 blocks of 4 safety numbers
+                let numbers = '';
+                for (let i = 0; i < 4; i++) {
+                    const num = ((digestBytes[i*2] << 8) | digestBytes[i*2 + 1]) % 10000;
+                    numbers += num.toString().padStart(4, '0') + (i < 3 ? ' ' : '');
+                }
+
+                // 4 distinct emojis
+                let emojis = '';
+                for (let i = 0; i < 4; i++) {
+                    emojis += EMOJI_DICTIONARY[digestBytes[i + 8] % EMOJI_DICTIONARY.length] + ' ';
+                }
+
+                peerRecord.e2ee = {
+                    ready: true,
+                    key: aesKey,
+                    numbers: numbers.trim(),
+                    emojis: emojis.trim(),
+                    verified: false
+                };
+
+                updateE2eeUI();
+            } catch (err) {
+                console.error('Failed to complete E2EE handshake:', err);
+            }
+        }
+
+        function updateE2eeUI() {
+            const badgeText = document.getElementById('e2ee-badge-text');
+            if (!badgeText) return;
+
+            const allReady = meshPeers.size > 0 && Array.from(meshPeers.values()).every(p => p.e2ee?.ready);
+            if (allReady) {
+                badgeText.innerText = 'E2EE Verified';
+            } else if (meshPeers.size > 0) {
+                badgeText.innerText = 'Securing E2EE...';
+            } else {
+                badgeText.innerText = 'AES-256 E2EE';
+            }
+        }
+
+        window.openE2eeModal = () => {
+            const targetPeers = getTargetPeers();
+            const p = targetPeers[0] || Array.from(meshPeers.values())[0];
+            const emojiEl = document.getElementById('e2ee-emoji-fingerprint');
+            const numEl = document.getElementById('e2ee-numbers-fingerprint');
+
+            if (p?.e2ee?.ready) {
+                if (emojiEl) emojiEl.innerText = p.e2ee.emojis;
+                if (numEl) numEl.innerText = p.e2ee.numbers;
+            } else {
+                if (emojiEl) emojiEl.innerText = '🛡️ ⚡ 💎 🚀';
+                if (numEl) numEl.innerText = 'Initializing Handshake...';
+            }
+
+            const overlay = document.getElementById('e2ee-modal-overlay');
+            const card = document.getElementById('e2ee-modal-card');
+            overlay.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            });
+        };
+
+        window.closeE2eeModal = () => {
+            const overlay = document.getElementById('e2ee-modal-overlay');
+            const card = document.getElementById('e2ee-modal-card');
+            overlay.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+        };
+
+        // =========================================
+        // MULTI-PEER MESH ENGINE
+        // =========================================
+        function getTargetPeers() {
+            if (selectedTarget === 'all') {
+                return Array.from(meshPeers.values()).filter(p => p.conn && p.conn.open);
+            }
+            const p = meshPeers.get(selectedTarget);
+            return (p && p.conn && p.conn.open) ? [p] : [];
+        }
+
+        function getTargetDisplayName() {
+            if (selectedTarget === 'all') {
+                return meshPeers.size > 1 ? `All Devices (${meshPeers.size})` : (meshPeers.size === 1 ? Array.from(meshPeers.values())[0].name : 'All Devices');
+            }
+            return meshPeers.get(selectedTarget)?.name || 'Selected Device';
+        }
+
+        function updateTargetLabels() {
+            const name = getTargetDisplayName();
+            const dropLabel = document.getElementById('drop-target-label');
+            const textLabel = document.getElementById('text-target-label');
+            if (dropLabel) dropLabel.innerText = `Recipient: ${name}`;
+            if (textLabel) textLabel.innerText = `Recipient: ${name}`;
+        }
+
+        function renderPeerChips() {
+            const container = document.getElementById('peer-chips-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // "All Devices" chip
+            const isAll = selectedTarget === 'all';
+            const allBtn = document.createElement('button');
+            allBtn.className = `px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
+                isAll 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                    : 'glass-btn text-zinc-400 hover:text-white'
+            }`;
+            allBtn.innerHTML = `<i class="ph-bold ph-globe text-sm"></i> <span>All Devices (${meshPeers.size})</span>`;
+            allBtn.onclick = () => {
+                selectedTarget = 'all';
+                renderPeerChips();
+                updateTargetLabels();
+            };
+            container.appendChild(allBtn);
+
+            // Peer chips
+            meshPeers.forEach((p) => {
+                const isSelected = selectedTarget === p.id;
+                const chip = document.createElement('div');
+                chip.className = `flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-xl text-xs font-medium transition-all shrink-0 ${
+                    isSelected 
+                        ? 'bg-blue-600/30 border border-blue-500/60 text-white' 
+                        : 'glass-panel !py-1 !px-2.5 text-zinc-300 hover:text-white'
+                }`;
+
+                const selectBtn = document.createElement('button');
+                selectBtn.className = 'flex items-center gap-1.5 cursor-pointer';
+                selectBtn.onclick = () => {
+                    selectedTarget = p.id;
+                    renderPeerChips();
+                    updateTargetLabels();
+                };
+                selectBtn.innerHTML = `
+                    <i class="ph-fill ${p.iconInfo.icon} text-sm ${isSelected ? 'text-blue-300' : p.iconInfo.color}"></i>
+                    <span class="max-w-[110px] truncate font-medium">${p.name}</span>
+                `;
+
+                const disconnectBtn = document.createElement('button');
+                disconnectBtn.className = 'text-zinc-500 hover:text-red-400 p-0.5 rounded transition-colors ml-1 cursor-pointer';
+                disconnectBtn.title = `Disconnect ${p.name}`;
+                disconnectBtn.innerHTML = `<i class="ph-bold ph-x text-xs"></i>`;
+                disconnectBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.disconnectPeer(p.id);
+                };
+
+                chip.appendChild(selectBtn);
+                chip.appendChild(disconnectBtn);
+                container.appendChild(chip);
+            });
+
+            updateTargetLabels();
+        }
+
+        function updateActiveViewUI() {
+            const setupView = document.getElementById('setup-view');
+            const activeView = document.getElementById('active-view');
+            const roomTitle = document.getElementById('connected-id-display');
+
+            if (meshPeers.size > 0) {
+                setupView.classList.add('hidden');
+                setupView.classList.remove('flex');
+                activeView.classList.remove('hidden');
+                activeView.classList.add('flex', 'fade-in');
+
+                if (roomTitle) {
+                    roomTitle.innerText = meshPeers.size === 1 
+                        ? Array.from(meshPeers.values())[0].name 
+                        : `Mesh Room (${meshPeers.size} devices)`;
+                }
+
+                updateAppStatus('connected', `Mesh: ${meshPeers.size} connected`);
+                renderPeerChips();
+                updateE2eeUI();
+            } else {
+                activeView.classList.add('hidden');
+                activeView.classList.remove('flex', 'fade-in');
+                setupView.classList.remove('hidden');
+                setupView.classList.add('flex', 'fade-in');
+                updateAppStatus('online', 'Ready');
+                document.getElementById('target-id-input').value = '';
+            }
+        }
+
+        window.disconnectPeer = (peerId) => {
+            const p = meshPeers.get(peerId);
+            if (p) {
+                if (p.conn) p.conn.close();
+                meshPeers.delete(peerId);
+                showToast(`${p.name} left the room.`, 'info');
+            }
+            if (selectedTarget === peerId) selectedTarget = 'all';
+            updateActiveViewUI();
+        };
+
+        window.disconnectAll = () => {
+            meshPeers.forEach(p => { if (p.conn) p.conn.close(); });
+            meshPeers.clear();
+            selectedTarget = 'all';
+            isTransferring = false;
+            fileQueue = [];
+            releaseWakeLock();
+            document.getElementById('transfer-overlay').classList.add('hidden');
+            updateActiveViewUI();
+            showToast('Left the mesh room', 'info');
+        };
+
+        // Window Add Peer Modal
+        let addPeerQrInstance = null;
+        window.openAddPeerModal = () => {
+            if (!myPin) return;
+            const url = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
+            const container = document.getElementById('add-peer-qrcode-canvas');
+            if (container) {
+                container.innerHTML = '';
+                try {
+                    addPeerQrInstance = new QRCode(container, {
+                        text: url,
+                        width: 160,
+                        height: 160,
+                        colorDark: "#09090b",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch(e){}
+            }
+
+            const pinEl = document.getElementById('add-peer-modal-pin');
+            if (pinEl) pinEl.innerText = myPin;
+
+            const overlay = document.getElementById('add-peer-modal-overlay');
+            const card = document.getElementById('add-peer-modal-card');
+            overlay.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+                document.getElementById('add-peer-input')?.focus();
+            });
+        };
+
+        window.closeAddPeerModal = () => {
+            const overlay = document.getElementById('add-peer-modal-overlay');
+            const card = document.getElementById('add-peer-modal-card');
+            overlay.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+        };
+
+        window.handleAddPeerPinInput = (e) => {
+            const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+            e.target.value = val;
+            const btn = document.getElementById('add-peer-connect-btn');
+            if (btn) btn.disabled = val.length !== 5;
+        };
+
+        window.connectAdditionalPeer = () => {
+            const input = document.getElementById('add-peer-input');
+            const targetPin = input.value.trim();
+            if (targetPin.length !== 5 || targetPin === myPin) return;
+
+            showToast(`Connecting to ${targetPin}...`, 'info');
+            const connection = peer.connect(targetPin, {
+                reliable: true,
+                metadata: { deviceName: getSavedDeviceName() }
+            });
+
+            connection.on('open', () => {
+                setupActiveConnection(connection);
+                window.closeAddPeerModal();
+                input.value = '';
+            });
+
+            connection.on('error', (err) => {
+                showToast(`Could not connect to ${targetPin}`, 'error');
+            });
         };
 
         function getOrCreateDeviceId() {
@@ -572,7 +1152,6 @@
         }
 
         function getIconForDevice(deviceName) {
-            // Elegant Frosted Theme Colors
             if(deviceName.includes('Mac') || deviceName.includes('Windows')) return { icon: 'ph-laptop', color: 'text-blue-400' };
             if(deviceName.includes('iPad') || deviceName.includes('Tablet')) return { icon: 'ph-device-tablet', color: 'text-purple-400' };
             if(deviceName.includes('iPhone') || deviceName.includes('Android')) return { icon: 'ph-device-mobile', color: 'text-teal-400' };
@@ -606,9 +1185,8 @@
                     }, { merge: true }).catch(()=>{});
                 };
                 
-                forceRadarUpdate = updatePresence; // Expose to the visibility handler
+                forceRadarUpdate = updatePresence;
 
-                // Fast 2s heartbeat
                 updatePresence();
                 radarInterval = setInterval(updatePresence, 2000);
 
@@ -621,7 +1199,6 @@
                     const now = Date.now();
                     snapshot.forEach(document => {
                         const data = document.data();
-                        // Filter out self and check fast 6s timeout
                         if (data.ip === myIp && data.deviceId !== myDeviceId) {
                             if (now - data.timestamp < 6000) { 
                                 peers.push(data);
@@ -659,13 +1236,12 @@
             
             peers.forEach((peerData, i) => {
                 const angle = (i / peers.length) * Math.PI * 2;
-                const radius = 90; // Orbit distance
+                const radius = 90;
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
                 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'absolute device-avatar-wrapper pointer-events-auto';
-                // Center the absolute wrapper, then translate by orbit coordinates
                 wrapper.style.top = '50%';
                 wrapper.style.left = '50%';
                 wrapper.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
@@ -691,6 +1267,13 @@
         }
 
         function initApp() {
+            // Register PWA Service Worker for Web Share Target
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => {
+                    console.warn('SW registration failed:', err);
+                });
+            }
+
             myPin = Math.floor(10000 + Math.random() * 90000).toString();
             document.getElementById('my-id-display').innerText = myPin;
 
@@ -720,7 +1303,6 @@
                     updateAppStatus('connecting', `Pairing with ${invitePin}...`);
                     setTimeout(() => {
                         window.initiateConnection();
-                        // Clean URL without refresh
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }, 500);
                 });
@@ -728,20 +1310,16 @@
                 peer.on('open', () => updateAppStatus('online', 'Ready'));
             }
 
-            // Gracefully handle server disconnects without dying
             peer.on('disconnected', () => {
                 if (peer && !peer.destroyed) {
                     updateAppStatus('connecting', 'Reconnecting...');
-                    peer.reconnect(); // Attempt to restore connection
+                    peer.reconnect();
                 }
             });
 
+            // Incoming connection handling (supports multiple mesh peers!)
             peer.on('connection', (connection) => {
-                if (activeConn && activeConn.open) {
-                    connection.close();
-                    return;
-                }
-                const deviceName = connection.metadata?.deviceName || 'UNKNOWN';
+                const deviceName = connection.metadata?.deviceName || 'Unknown Device';
                 pendingConn = connection;
                 showSecurityModal(connection.peer, deviceName);
             });
@@ -750,10 +1328,9 @@
                 console.warn('PeerJS Error:', err);
                 if (err.type === 'peer-unavailable') {
                     updateAppStatus('error', 'Device not found');
-                    setTimeout(() => { if (!activeConn) updateAppStatus('online', 'Ready'); }, 3000);
+                    setTimeout(() => { if (meshPeers.size === 0) updateAppStatus('online', 'Ready'); }, 3000);
                 } else if (err.type === 'network' || err.type === 'server-error') {
                     updateAppStatus('error', 'Network Error');
-                    // Automatically retry if it was a network drop
                     setTimeout(() => {
                         if (peer && !peer.destroyed && peer.disconnected) {
                             peer.reconnect();
@@ -769,32 +1346,34 @@
             setupDragAndDrop();
             setupVisibilityHandler();
             setupModalListeners();
+            checkSharedTargetItems();
         }
 
         function setupModalListeners() {
-            const qrOverlay = document.getElementById('qr-modal-overlay');
-            if (qrOverlay) {
-                qrOverlay.addEventListener('click', (e) => {
-                    if (e.target.id === 'qr-modal-overlay') window.closeQrModal();
-                });
-            }
-            const qlOverlay = document.getElementById('quicklook-modal-overlay');
-            if (qlOverlay) {
-                qlOverlay.addEventListener('click', (e) => {
-                    if (e.target.id === 'quicklook-modal-overlay') window.closeQuickLook();
-                });
-            }
-            const nameOverlay = document.getElementById('name-modal-overlay');
-            if (nameOverlay) {
-                nameOverlay.addEventListener('click', (e) => {
-                    if (e.target.id === 'name-modal-overlay') window.closeDeviceNameModal();
-                });
-            }
+            const overlays = [
+                { id: 'qr-modal-overlay', close: window.closeQrModal },
+                { id: 'quicklook-modal-overlay', close: window.closeQuickLook },
+                { id: 'name-modal-overlay', close: window.closeDeviceNameModal },
+                { id: 'e2ee-modal-overlay', close: window.closeE2eeModal },
+                { id: 'add-peer-modal-overlay', close: window.closeAddPeerModal }
+            ];
+
+            overlays.forEach(({ id, close }) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('click', (e) => {
+                        if (e.target.id === id) close();
+                    });
+                }
+            });
+
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     window.closeQuickLook();
                     window.closeDeviceNameModal();
                     window.closeQrModal();
+                    window.closeE2eeModal();
+                    window.closeAddPeerModal();
                 }
             });
         }
@@ -866,12 +1445,14 @@
 
             if (forceRadarUpdate) forceRadarUpdate();
 
-            if (activeConn && activeConn.open) {
-                activeConn.send(JSON.stringify({
-                    type: 'device_name_update',
-                    name: newName
-                }));
-            }
+            meshPeers.forEach(p => {
+                if (p.conn && p.conn.open) {
+                    p.conn.send(JSON.stringify({
+                        type: 'device_name_update',
+                        name: newName
+                    }));
+                }
+            });
             showToast(`Device renamed to "${newName}"`, 'success');
         };
 
@@ -885,7 +1466,6 @@
         };
 
         let qrCodeInstance = null;
-
         window.showQrModal = () => {
             if (!myPin) return;
             const url = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
@@ -918,22 +1498,18 @@
             const overlay = document.getElementById('qr-modal-overlay');
             overlay.classList.add('opacity-0');
             document.getElementById('qr-modal-card').classList.add('scale-95');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 300);
+            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         };
 
-        // New function to instantly recover when the window is maximized/brought to front
         function setupVisibilityHandler() {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
-                    // If the connection dropped while minimized, wake it up
                     if (peer && peer.disconnected && !peer.destroyed) {
                         updateAppStatus('connecting', 'Waking up...');
                         peer.reconnect();
                     }
-                    // Instantly reappear on radar
                     if (forceRadarUpdate) forceRadarUpdate();
+                    checkSharedTargetItems();
                 }
             });
         }
@@ -978,7 +1554,7 @@
 
         window.initiateConnection = () => {
             const targetPin = document.getElementById('target-id-input').value.trim();
-            if (targetPin.length !== 5) return;
+            if (targetPin.length !== 5 || targetPin === myPin) return;
             
             updateAppStatus('connecting', 'Connecting...');
             const connection = peer.connect(targetPin, { 
@@ -987,73 +1563,58 @@
             });
             
             connection.on('open', () => setupActiveConnection(connection));
-            connection.on('error', () => updateAppStatus('online', 'Ready'));
-        }
+            connection.on('error', () => {
+                if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
+            });
+        };
 
         function setupActiveConnection(connection) {
-            activeConn = connection;
+            const peerId = connection.peer;
+            const deviceName = connection.metadata?.deviceName || peerId;
+            const styleInfo = getIconForDevice(deviceName);
+
+            const peerRecord = {
+                id: peerId,
+                conn: connection,
+                name: deviceName,
+                iconInfo: styleInfo,
+                e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false }
+            };
+
+            meshPeers.set(peerId, peerRecord);
             pendingConn = null;
-            
-            updateAppStatus('connected', 'Secured');
-            document.getElementById('setup-view').classList.add('hidden');
-            document.getElementById('setup-view').classList.remove('flex');
-            
-            const activeView = document.getElementById('active-view');
-            activeView.classList.remove('hidden');
-            activeView.classList.add('flex', 'fade-in');
-            
-            const peerName = activeConn.metadata?.deviceName || activeConn.peer;
-            document.getElementById('connected-id-display').innerText = peerName;
-            
-            const styleInfo = getIconForDevice(peerName);
-            document.getElementById('connected-device-icon').className = `ph-fill ${styleInfo.icon} text-2xl ${styleInfo.color}`;
 
-            activeConn.on('data', handleIncomingData);
-            activeConn.on('close', window.disconnect);
+            setupPeerE2EE(peerRecord);
+
+            connection.on('data', (data) => handleIncomingData(data, peerId));
+            connection.on('close', () => window.disconnectPeer(peerId));
+            connection.on('error', (err) => console.warn('Conn error for peer:', peerId, err));
+
+            updateActiveViewUI();
+            checkPendingSharedItemsForMesh();
+            showToast(`${deviceName} joined the session!`, 'success');
         }
-
-        window.disconnect = () => {
-            if (activeConn) activeConn.close();
-            activeConn = null;
-            isTransferring = false;
-            fileQueue = [];
-            releaseWakeLock();
-            
-            document.getElementById('transfer-overlay').classList.add('hidden');
-            updateAppStatus('online', 'Ready');
-            
-            document.getElementById('active-view').classList.add('hidden');
-            document.getElementById('active-view').classList.remove('flex', 'fade-in');
-            
-            const setupView = document.getElementById('setup-view');
-            setupView.classList.remove('hidden');
-            setupView.classList.add('flex', 'fade-in');
-            document.getElementById('target-id-input').value = '';
-        };
 
         function updateAppStatus(status, text) {
             const dot = document.getElementById('status-dot');
             const txt = document.getElementById('status-text');
             const connectBtn = document.getElementById('connect-btn');
             
-            txt.innerText = text;
+            if (txt) txt.innerText = text;
             
             let bgColor = 'bg-yellow-500 animate-pulse'; 
             if(status === 'online') bgColor = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]';
             if(status === 'connected') bgColor = 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]';
             if(status === 'error') bgColor = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]';
             
-            dot.className = `w-2 h-2 rounded-full ${bgColor}`;
-
-            if(connectBtn) {
-                connectBtn.disabled = status !== 'online';
-            }
+            if (dot) dot.className = `w-2 h-2 rounded-full ${bgColor}`;
+            if (connectBtn) connectBtn.disabled = status !== 'online';
         }
 
         window.handleFileSelect = (e) => {
             if(e.target.files.length) enqueueFiles(Array.from(e.target.files));
             e.target.value = '';
-        }
+        };
 
         function setupDragAndDrop() {
             const dropZone = document.getElementById('drop-zone');
@@ -1063,14 +1624,14 @@
             });
             ['dragenter', 'dragover'].forEach(eventName => {
                 dropZone.addEventListener(eventName, () => {
-                    if (activeConn && activeConn.open) dropZone.classList.add('drag-active');
+                    if (meshPeers.size > 0) dropZone.classList.add('drag-active');
                 }, false);
             });
             ['dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false);
             });
             dropZone.addEventListener('drop', (e) => {
-                if (activeConn && activeConn.open && e.dataTransfer.files.length > 0) {
+                if (meshPeers.size > 0 && e.dataTransfer.files.length > 0) {
                     enqueueFiles(Array.from(e.dataTransfer.files));
                 }
             }, false);
@@ -1151,78 +1712,114 @@
                 return;
             }
 
+            const targets = getTargetPeers();
+            if (targets.length === 0) {
+                isTransferring = false;
+                document.getElementById('transfer-overlay').classList.add('hidden');
+                releaseWakeLock();
+                showToast('No active target connected', 'warn');
+                return;
+            }
+
             requestWakeLock();
             isTransferring = true;
             const file = fileQueue.shift();
             
-            transferState = { role: 'sender', file: file, offset: 0 };
+            transferState = { role: 'sender', file: file, offset: 0, acksReceived: 0, targetCount: targets.length };
             initTransferMetrics(file.size);
             showTransferUI('sender', file.name, fileQueue.length);
 
-            activeConn.send(JSON.stringify({ 
-                type: 'meta', 
-                name: file.name, 
-                size: file.size, 
-                mime: file.type || 'application/octet-stream' 
-            }));
+            targets.forEach(t => {
+                if (t.conn && t.conn.open) {
+                    t.conn.send(JSON.stringify({ 
+                        type: 'meta', 
+                        senderName: getSavedDeviceName(),
+                        name: file.name, 
+                        size: file.size, 
+                        mime: file.type || 'application/octet-stream' 
+                    }));
+                }
+            });
         }
 
         async function streamChunks(file) {
-            const dc = activeConn?.dataChannel;
+            const targets = getTargetPeers();
             transferState.offset = 0;
             initTransferMetrics(file.size);
 
-            while (transferState.offset < file.size && activeConn && isTransferring) {
-                // Backpressure flow control via bufferedAmount
-                if (dc && dc.bufferedAmount > HIGH_WATER_MARK) {
-                    await new Promise(resolve => {
-                        dc.bufferedAmountLowThreshold = LOW_WATER_MARK;
-                        const onLow = () => {
-                            dc.removeEventListener('bufferedamountlow', onLow);
-                            resolve();
-                        };
-                        dc.addEventListener('bufferedamountlow', onLow);
-                        setTimeout(() => {
-                            dc.removeEventListener('bufferedamountlow', onLow);
-                            resolve();
-                        }, 50);
-                    });
-                    if (!isTransferring || !activeConn) return;
+            while (transferState.offset < file.size && isTransferring && targets.some(t => t.conn && t.conn.open)) {
+                // Backpressure flow control across all active targets
+                const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || 0));
+                if (maxBuffered > HIGH_WATER_MARK) {
+                    await new Promise(resolve => setTimeout(resolve, 30));
+                    if (!isTransferring) return;
                 }
 
                 const slice = file.slice(transferState.offset, transferState.offset + CHUNK_SIZE);
-                const buffer = await slice.arrayBuffer();
-                if (!isTransferring || !activeConn) return;
+                const rawBuffer = await slice.arrayBuffer();
+                if (!isTransferring) return;
 
-                activeConn.send(buffer);
-                transferState.offset += buffer.byteLength;
+                // Transmit chunk (with AES-256-GCM encryption if peer handshake ready)
+                for (const t of targets) {
+                    if (!t.conn || !t.conn.open) continue;
 
-                const inFlight = dc ? dc.bufferedAmount : 0;
-                const sentBytes = Math.max(0, transferState.offset - inFlight);
-                updateTransferMetrics(sentBytes, file.size);
+                    if (t.e2ee?.ready && t.e2ee.key) {
+                        try {
+                            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                            const ciphertext = await window.crypto.subtle.encrypt(
+                                { name: "AES-GCM", iv: iv },
+                                t.e2ee.key,
+                                rawBuffer
+                            );
+                            // Packet structure: [0xEE magic byte (1) | IV (12) | ciphertext]
+                            const packet = new Uint8Array(1 + 12 + ciphertext.byteLength);
+                            packet[0] = 0xEE;
+                            packet.set(iv, 1);
+                            packet.set(new Uint8Array(ciphertext), 13);
+                            t.conn.send(packet.buffer);
+                        } catch(err) {
+                            t.conn.send(rawBuffer);
+                        }
+                    } else {
+                        t.conn.send(rawBuffer);
+                    }
+                }
+
+                transferState.offset += rawBuffer.byteLength;
+                updateTransferMetrics(transferState.offset, file.size);
             }
 
             if (transferState.offset >= file.size && isTransferring) {
-                // Wait for all queued socket buffers to drain before signalling EOF
+                // Wait for all targets to drain before sending EOF
                 const waitForDrain = () => {
-                    if (!activeConn || !isTransferring) return;
-                    if (dc && dc.bufferedAmount > 0) {
-                        const sentBytes = Math.max(0, transferState.offset - dc.bufferedAmount);
-                        updateTransferMetrics(sentBytes, file.size);
+                    if (!isTransferring) return;
+                    const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || 0));
+                    if (maxBuffered > 0) {
                         setTimeout(waitForDrain, 25);
                     } else {
                         updateTransferMetrics(file.size, file.size);
-                        activeConn.send(JSON.stringify({ type: 'eof' }));
+                        targets.forEach(t => {
+                            if (t.conn && t.conn.open) {
+                                t.conn.send(JSON.stringify({ type: 'eof' }));
+                            }
+                        });
                     }
                 };
                 waitForDrain();
             }
         }
 
-        async function handleIncomingData(data) {
+        async function handleIncomingData(data, senderPeerId) {
+            const peerRecord = meshPeers.get(senderPeerId);
+
             if (typeof data === 'string') {
                 const msg = JSON.parse(data);
-                if (msg.type === 'meta') {
+
+                if (msg.type === 'e2ee_handshake') {
+                    if (peerRecord) {
+                        await handlePeerE2EEHandshake(peerRecord, msg.pubKey);
+                    }
+                } else if (msg.type === 'meta') {
                     requestWakeLock();
                     transferState = { 
                         role: 'receiver', 
@@ -1230,7 +1827,9 @@
                         receivedBytes: 0, 
                         meta: msg,
                         opfsHandle: null,
-                        opfsWritable: null
+                        opfsWritable: null,
+                        senderPeerId: senderPeerId,
+                        senderName: msg.senderName || peerRecord?.name || 'Peer'
                     };
 
                     if (opfsAvailable) {
@@ -1242,7 +1841,6 @@
                             transferState.opfsHandle = fileHandle;
                             transferState.opfsWritable = writable;
                         } catch(err) {
-                            console.warn('OPFS initialization failed, using memory buffer:', err);
                             transferState.opfsHandle = null;
                             transferState.opfsWritable = null;
                         }
@@ -1250,7 +1848,8 @@
 
                     initTransferMetrics(msg.size);
                     showTransferUI('receiver', msg.name, 0);
-                    activeConn.send(JSON.stringify({ type: 'ready' }));
+                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready' }));
+
                 } else if (msg.type === 'ready') {
                     if (transferState.role === 'sender' && transferState.file) {
                         streamChunks(transferState.file);
@@ -1258,46 +1857,87 @@
                 } else if (msg.type === 'cancel') {
                     await handleTransferCancelled('Transfer was cancelled by peer.');
                 } else if (msg.type === 'text_snippet') {
-                    addTextToHistory(msg.text, 'received');
-                    showToast('Received new text snippet!', 'info');
+                    addTextToHistory(msg.text, 'received', msg.senderName || peerRecord?.name);
+                    showToast(`Received text snippet from ${msg.senderName || 'peer'}!`, 'info');
+                } else if (msg.type === 'e2ee_text') {
+                    let plainText = '';
+                    if (peerRecord?.e2ee?.ready && peerRecord.e2ee.key) {
+                        try {
+                            const decrypted = await window.crypto.subtle.decrypt(
+                                { name: "AES-GCM", iv: new Uint8Array(msg.iv) },
+                                peerRecord.e2ee.key,
+                                new Uint8Array(msg.cipher)
+                            );
+                            plainText = new TextDecoder().decode(decrypted);
+                        } catch(e) {
+                            plainText = '[Encrypted text decryption failed]';
+                        }
+                    } else {
+                        plainText = '[Encrypted text: Waiting for handshake]';
+                    }
+                    addTextToHistory(plainText, 'received', msg.senderName || peerRecord?.name);
+                    showToast(`Received encrypted text snippet from ${msg.senderName || 'peer'}!`, 'info');
                 } else if (msg.type === 'device_name_update') {
-                    document.getElementById('connected-id-display').innerText = msg.name;
-                    const styleInfo = getIconForDevice(msg.name);
-                    document.getElementById('connected-device-icon').className = `ph-fill ${styleInfo.icon} text-2xl ${styleInfo.color}`;
-                    showToast(`Peer renamed to "${msg.name}"`, 'info');
+                    if (peerRecord) {
+                        peerRecord.name = msg.name;
+                        peerRecord.iconInfo = getIconForDevice(msg.name);
+                        renderPeerChips();
+                        showToast(`Device renamed to "${msg.name}"`, 'info');
+                    }
                 } else if (msg.type === 'eof') {
                     await assembleAndDownloadReceivedFile();
-                    activeConn.send(JSON.stringify({ type: 'eof_ack' }));
+                    peerRecord?.conn?.send(JSON.stringify({ type: 'eof_ack' }));
                 } else if (msg.type === 'eof_ack') {
-                    updateTransferMetrics(transferState.file?.size || 0, transferState.file?.size || 0);
-                    setTimeout(() => {
-                        processNextFile();
-                    }, 350);
+                    transferState.acksReceived = (transferState.acksReceived || 0) + 1;
+                    if (transferState.acksReceived >= (transferState.targetCount || 1)) {
+                        updateTransferMetrics(transferState.file?.size || 0, transferState.file?.size || 0);
+                        setTimeout(() => { processNextFile(); }, 350);
+                    }
                 }
             } else {
+                // Incoming binary chunk
                 const state = transferState;
                 if (!state.meta || !isTransferring) return;
 
-                if (state.opfsWritable) {
+                let chunkData = data;
+                const rawBytes = new Uint8Array(data);
+
+                // Zero-Knowledge AES-256-GCM Decryption
+                if (rawBytes[0] === 0xEE && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 13) {
                     try {
-                        await state.opfsWritable.write(data);
+                        const iv = rawBytes.slice(1, 13);
+                        const ciphertext = rawBytes.slice(13);
+                        chunkData = await window.crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: iv },
+                            peerRecord.e2ee.key,
+                            ciphertext
+                        );
                     } catch(e) {
-                        console.warn('OPFS write failed, falling back to memory buffer:', e);
-                        state.opfsWritable = null;
-                        state.receivedBuffers.push(data);
+                        console.error('Failed to decrypt chunk:', e);
                     }
-                } else {
-                    state.receivedBuffers.push(data);
                 }
 
-                state.receivedBytes += data.byteLength;
+                if (state.opfsWritable) {
+                    try {
+                        await state.opfsWritable.write(chunkData);
+                    } catch(e) {
+                        state.opfsWritable = null;
+                        state.receivedBuffers.push(chunkData);
+                    }
+                } else {
+                    state.receivedBuffers.push(chunkData);
+                }
+
+                state.receivedBytes += (chunkData.byteLength || data.byteLength);
                 updateTransferMetrics(state.receivedBytes, state.meta.size);
             }
         }
 
         window.cancelTransfer = async () => {
-            if (!isTransferring || !activeConn) return;
-            activeConn.send(JSON.stringify({ type: 'cancel' }));
+            if (!isTransferring) return;
+            getTargetPeers().forEach(t => {
+                if (t.conn && t.conn.open) t.conn.send(JSON.stringify({ type: 'cancel' }));
+            });
             await handleTransferCancelled('You cancelled the transfer.');
         };
 
@@ -1338,7 +1978,7 @@
                 fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta.mime });
             }
 
-            addFileToHistory(fileOrBlob, state.meta.name, state.meta.size);
+            addFileToHistory(fileOrBlob, state.meta.name, state.meta.size, state.senderName);
             updateTransferMetrics(state.meta.size, state.meta.size);
             
             setTimeout(() => {
@@ -1371,7 +2011,7 @@
             updateTransferMetrics(0, transferState.file?.size || transferState.meta?.size || 1);
         }
 
-        function addFileToHistory(blobOrFile, filename, size) {
+        function addFileToHistory(blobOrFile, filename, size, senderName = '') {
             const list = document.getElementById('received-list');
             const empty = document.getElementById('empty-received');
             const count = document.getElementById('received-count');
@@ -1404,6 +2044,8 @@
                 previewEl = `<div class="w-11 h-11 bg-black/30 border border-white/5 rounded-lg shrink-0 flex items-center justify-center text-zinc-400 cursor-pointer hover:scale-105 transition-transform" onclick="window.openQuickLook('${url}', '${safeName}', 'file', '${formattedSize}')"><i class="ph-fill ph-file text-xl"></i></div>`;
             }
 
+            const senderBadge = senderName ? `<span class="text-[10px] text-zinc-500 font-mono">From: ${escapeHtml(senderName)} • </span>` : '';
+
             const item = document.createElement('div');
             item.className = 'bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between hover:bg-white/10 transition-colors fade-in';
             item.innerHTML = `
@@ -1411,7 +2053,7 @@
                     ${previewEl}
                     <div class="truncate cursor-pointer" onclick="window.openQuickLook('${url}', '${safeName}', '${type}', '${formattedSize}')">
                         <p class="font-medium text-sm text-white truncate mb-0.5 hover:text-blue-400 transition-colors">${filename}</p>
-                        <p class="text-xs text-zinc-500">${formattedSize}</p>
+                        <p class="text-xs text-zinc-500">${senderBadge}${formattedSize}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0 ml-2">
@@ -1531,23 +2173,56 @@
             }
         };
 
-        window.sendSharedText = () => {
+        window.sendSharedText = async () => {
             const input = document.getElementById('share-text-input');
             const text = input.value.trim();
-            if (!text || !activeConn || !activeConn.open) {
-                if (!activeConn || !activeConn.open) showToast('Not connected to a device', 'warn');
+            const targets = getTargetPeers();
+
+            if (!text || targets.length === 0) {
+                if (targets.length === 0) showToast('No devices connected to receive text', 'warn');
                 return;
             }
 
-            activeConn.send(JSON.stringify({
-                type: 'text_snippet',
-                text: text,
-                timestamp: Date.now()
-            }));
+            for (const t of targets) {
+                if (!t.conn || !t.conn.open) continue;
+
+                if (t.e2ee?.ready && t.e2ee.key) {
+                    try {
+                        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                        const encoded = new TextEncoder().encode(text);
+                        const ciphertext = await window.crypto.subtle.encrypt(
+                            { name: "AES-GCM", iv: iv },
+                            t.e2ee.key,
+                            encoded
+                        );
+                        t.conn.send(JSON.stringify({
+                            type: 'e2ee_text',
+                            senderName: getSavedDeviceName(),
+                            iv: Array.from(iv),
+                            cipher: Array.from(new Uint8Array(ciphertext)),
+                            timestamp: Date.now()
+                        }));
+                    } catch(err) {
+                        t.conn.send(JSON.stringify({
+                            type: 'text_snippet',
+                            senderName: getSavedDeviceName(),
+                            text: text,
+                            timestamp: Date.now()
+                        }));
+                    }
+                } else {
+                    t.conn.send(JSON.stringify({
+                        type: 'text_snippet',
+                        senderName: getSavedDeviceName(),
+                        text: text,
+                        timestamp: Date.now()
+                    }));
+                }
+            }
 
             addTextToHistory(text, 'sent');
             input.value = '';
-            showToast('Text sent to device!', 'success');
+            showToast(`Text beamed to ${getTargetDisplayName()}!`, 'success');
         };
 
         window.pasteFromClipboard = async () => {
@@ -1563,7 +2238,7 @@
             }
         };
 
-        function addTextToHistory(text, direction) {
+        function addTextToHistory(text, direction, senderName = '') {
             const list = document.getElementById('received-list');
             const empty = document.getElementById('empty-received');
             const count = document.getElementById('received-count');
@@ -1576,12 +2251,16 @@
                 ? `<a href="${text.trim()}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline break-all text-xs font-mono flex items-center gap-1">${escapeHtml(text.trim())} <i class="ph-bold ph-arrow-square-out text-xs shrink-0"></i></a>`
                 : `<p class="text-xs text-zinc-300 font-sans break-words whitespace-pre-wrap max-h-28 overflow-y-auto pr-1 select-text">${escapeHtml(text)}</p>`;
 
+            const directionLabel = direction === 'sent' 
+                ? 'Sent Snippet' 
+                : (senderName ? `From: ${escapeHtml(senderName)}` : 'Received Snippet');
+
             const item = document.createElement('div');
             item.className = 'bg-white/5 border border-white/10 p-3.5 rounded-xl flex flex-col gap-2 hover:bg-white/10 transition-colors fade-in';
             item.innerHTML = `
                 <div class="flex items-center justify-between text-[11px] text-zinc-500 font-medium pb-1.5 border-b border-white/5">
-                    <span class="flex items-center gap-1.5 text-zinc-400 font-medium">
-                        <i class="ph-fill ph-chat-circle-text text-sm text-blue-400"></i> ${direction === 'sent' ? 'Sent Snippet' : 'Received Snippet'}
+                    <span class="flex items-center gap-1.5 text-zinc-400 font-medium truncate max-w-[200px]">
+                        <i class="ph-fill ph-chat-circle-text text-sm text-blue-400"></i> ${directionLabel}
                     </span>
                     <button onclick="window.copyTextSnippet(this, decodeURIComponent('${encodeURIComponent(text)}'))" class="text-blue-400 hover:text-white glass-btn px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1 transition-colors">
                         <i class="ph-bold ph-copy"></i> Copy
