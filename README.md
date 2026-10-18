@@ -11,6 +11,9 @@ WebDrop turns any modern desktop or mobile browser into a high-speed, direct pee
 - **🎯 Apple-Inspired Radar Discovery**: Circular live radar animation (`#radar-container`) that scans for nearby devices on the same network using ephemeral Firebase presence heartbeats.
 - **🌐 Multi-Peer Mesh / "Room Radar"**: Connect 3 or more devices simultaneously into a mesh room. Choose to broadcast files and text to all connected devices at once or click individual peer chips to send to a specific target. Invite additional devices anytime with the in-room "Add Device" QR & PIN modal.
 - **🔐 Zero-Knowledge End-to-End Encryption (E2EE)**: Hardware-accelerated **AES-256-GCM** encryption powered by ephemeral **ECDH (P-256)** key exchange via `window.crypto.subtle`. Verify your connection via a 4-emoji cryptographic fingerprint and 16-digit safety numbers.
+- **🔄 Fault-Tolerant Transfer Resume**: Interrupted transfers automatically resume from their exact byte offset using persistent **OPFS checkpoints**. If Wi-Fi blips or a peer temporarily disconnects mid-transfer, re-initiating the transfer resumes seamlessly from the saved checkpoint instead of starting from 0%.
+- **✈️ Zero-Internet / Airplane Mode (Visual Handshake)**: Transfer files completely off-grid with zero internet connection or STUN servers. Devices exchange raw WebRTC Session Description Protocol (SDP) tokens directly via animated scannable QR codes or camera scanner.
+- **🖥️ Ultra-Low Latency Screen Casting**: Live 60 FPS sub-50ms screen sharing and presentation mode via WebRTC `MediaStream`. Connected devices can view broadcasts in real time with Picture-in-Picture (PiP) and Fullscreen controls.
 - **📲 PWA & Web Share Target**: Fully installable Progressive Web App. Integrates directly into your smartphone's native OS **"Share..."** menu, intercepting shared photos, videos, and links via the Service Worker & IndexedDB.
 - **🚀 High-Throughput WebRTC Streaming**: Implements non-blocking DataChannel streaming with backpressure flow control (`bufferedAmount` & `bufferedamountlow`). Eliminates stop-and-wait ACK bottlenecks and maximizes local transfer speeds (50–100+ MB/s).
 - **⚡ Live Transfer Metrics**: Real-time throughput speed (MB/s or KB/s), dynamic ETA calculation, and transferred byte counter alongside a smooth gradient progress bar.
@@ -19,6 +22,7 @@ WebDrop turns any modern desktop or mobile browser into a high-speed, direct pee
 - **💾 OPFS Stream-to-Disk**: Streams large incoming files directly to disk using the Origin Private File System (`navigator.storage.getDirectory()`) to avoid RAM bloat.
 - **📱 Instant QR Code Pairing**: Generate an instant QR code for mobile devices. Scanning automatically navigates to the session URL with `?c=PIN`, auto-fills the pairing PIN, and connects hands-free.
 - **🔋 Screen Wake Lock**: Automatically activates the Screen Wake Lock API during active file transfers so mobile devices don't sleep mid-transfer.
+- **⚖️ Privacy & Terms Disclosures**: Dedicated zero-data collection [Privacy Policy](privacy.html) and [Terms of Service](terms.html) pages outlining WebDrop's peer-to-peer, zero-knowledge architecture.
 
 ---
 

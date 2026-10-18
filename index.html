@@ -358,6 +358,158 @@
         </div>
     </div>
 
+    <!-- Live Screen Cast Theater Modal -->
+    <div id="screencast-modal-overlay" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/90 backdrop-blur-xl">
+        <div class="glass-panel p-4 sm:p-6 w-full max-w-4xl max-h-[92vh] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden" id="screencast-modal-card">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-1.5 text-red-400">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Live Cast</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white" id="screencast-title">Screen Stream</h3>
+                        <p class="text-[11px] text-zinc-400 font-mono">60 FPS • Ultra-Low Latency (&lt;50ms)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.toggleScreencastPip()" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5" title="Picture in Picture">
+                        <i class="ph-bold ph-picture-in-picture text-sm"></i> <span class="hidden sm:inline">PiP</span>
+                    </button>
+                    <button onclick="window.toggleScreencastFullscreen()" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5" title="Fullscreen">
+                        <i class="ph-bold ph-corners-out text-sm"></i> <span class="hidden sm:inline">Fullscreen</span>
+                    </button>
+                    <button onclick="window.closeScreencastModal()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
+                        <i class="ph-bold ph-x text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-hidden flex items-center justify-center min-h-[350px] max-h-[75vh] bg-black/70 rounded-2xl border border-white/5 relative group">
+                <video id="screencast-video" autoplay playsinline class="w-full h-full object-contain rounded-xl"></video>
+                <div id="screencast-overlay-message" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-black/80 hidden">
+                    <i class="ph-fill ph-video-camera-slash text-4xl text-zinc-500 mb-2"></i>
+                    <p class="text-sm font-semibold text-white">Stream Ended</p>
+                    <p class="text-xs text-zinc-400 mt-1">The host has stopped casting their screen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zero-Internet / Airplane Mode Modal (Visual QR Handshake) -->
+    <div id="offline-modal-overlay" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/80 backdrop-blur-md">
+        <div class="glass-panel p-6 w-full max-w-md text-center transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto" id="offline-modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+                        <i class="ph-fill ph-airplane-tilt text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-base font-bold text-white">Zero-Internet Mode</h3>
+                        <p class="text-[11px] text-zinc-400">P2P transfer with zero cloud connection</p>
+                    </div>
+                </div>
+                <button onclick="window.closeOfflineModal()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Role Selector Tabs -->
+            <div class="grid grid-cols-2 gap-1.5 p-1 bg-white/5 rounded-xl border border-white/5 mb-5 text-xs font-semibold">
+                <button onclick="window.switchOfflineRole('host')" id="offline-tab-host" class="py-2 rounded-lg bg-white/10 text-white transition-all cursor-pointer">
+                    Device 1 (Host)
+                </button>
+                <button onclick="window.switchOfflineRole('join')" id="offline-tab-join" class="py-2 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer">
+                    Device 2 (Join)
+                </button>
+            </div>
+
+            <!-- Host View (Device 1) -->
+            <div id="offline-host-view" class="space-y-4">
+                <p class="text-xs text-zinc-300">
+                    <strong class="text-white">Step 1:</strong> Have Device 2 scan this QR code or copy the handshake token below.
+                </p>
+
+                <div class="bg-white p-3 rounded-2xl mx-auto w-fit shadow-xl flex items-center justify-center">
+                    <div id="offline-host-qrcode"></div>
+                </div>
+
+                <div class="text-left bg-black/40 border border-white/5 rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] text-zinc-500 uppercase font-semibold">Offer Handshake Token</span>
+                        <button onclick="window.copyOfflineToken('host')" class="text-blue-400 hover:text-white text-[11px] font-semibold flex items-center gap-1">
+                            <i class="ph-bold ph-copy"></i> Copy Token
+                        </button>
+                    </div>
+                    <textarea id="offline-host-token" readonly rows="2" class="w-full bg-transparent text-[10px] font-mono text-zinc-400 resize-none border-none focus:outline-none select-all break-all"></textarea>
+                </div>
+
+                <div class="pt-2 border-t border-white/10 space-y-2">
+                    <p class="text-xs text-zinc-300">
+                        <strong class="text-white">Step 2:</strong> Scan or paste the Answer token from Device 2:
+                    </p>
+                    <div class="flex gap-2">
+                        <input type="text" id="offline-answer-input" placeholder="Paste answer token from Device 2" class="flex-1 glass-input rounded-xl px-3 py-2 text-xs font-mono placeholder:text-zinc-600">
+                        <button onclick="window.applyOfflineAnswer()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors">
+                            Connect
+                        </button>
+                    </div>
+                    <button onclick="window.toggleCameraScanner('host')" class="w-full glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
+                        <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-host">Scan Answer with Camera</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Joiner View (Device 2) -->
+            <div id="offline-join-view" class="space-y-4 hidden">
+                <p class="text-xs text-zinc-300">
+                    <strong class="text-white">Step 1:</strong> Scan Device 1's QR code or paste their offer token:
+                </p>
+
+                <div class="flex gap-2">
+                    <input type="text" id="offline-offer-input" placeholder="Paste offer token from Device 1" class="flex-1 glass-input rounded-xl px-3 py-2 text-xs font-mono placeholder:text-zinc-600">
+                    <button onclick="window.applyOfflineOffer()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors">
+                        Generate
+                    </button>
+                </div>
+
+                <button onclick="window.toggleCameraScanner('join')" class="w-full glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
+                    <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-join">Scan Device 1 with Camera</span>
+                </button>
+
+                <!-- Generated Answer Section (revealed after offer applied) -->
+                <div id="offline-join-answer-card" class="hidden space-y-4 pt-3 border-t border-white/10">
+                    <p class="text-xs text-zinc-300">
+                        <strong class="text-white">Step 2:</strong> Device 1, scan this Answer QR code:
+                    </p>
+                    <div class="bg-white p-3 rounded-2xl mx-auto w-fit shadow-xl flex items-center justify-center">
+                        <div id="offline-join-qrcode"></div>
+                    </div>
+                    <div class="text-left bg-black/40 border border-white/5 rounded-xl p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-zinc-500 uppercase font-semibold">Answer Token</span>
+                            <button onclick="window.copyOfflineToken('join')" class="text-blue-400 hover:text-white text-[11px] font-semibold flex items-center gap-1">
+                                <i class="ph-bold ph-copy"></i> Copy Token
+                            </button>
+                        </div>
+                        <textarea id="offline-join-token" readonly rows="2" class="w-full bg-transparent text-[10px] font-mono text-zinc-400 resize-none border-none focus:outline-none select-all break-all"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Camera Scanner Container -->
+            <div id="scanner-container" class="mt-4 hidden p-2 bg-black rounded-xl border border-white/10 relative">
+                <video id="scanner-video" playsinline autoplay class="w-full h-44 object-cover rounded-lg bg-black"></video>
+                <div class="absolute inset-0 border-2 border-purple-500/40 rounded-xl pointer-events-none flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-purple-400 rounded-lg animate-pulse"></div>
+                </div>
+                <button onclick="window.stopCameraScanner()" class="mt-2 text-xs text-zinc-400 hover:text-white">
+                    Cancel Camera Scan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="px-6 py-4 sticky top-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/5">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
@@ -454,6 +606,12 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Zero-Internet / Airplane Mode Button -->
+            <button onclick="window.openOfflineModal()" class="w-full glass-btn text-zinc-300 hover:text-white rounded-xl py-3 flex items-center justify-center gap-2 text-xs font-semibold border-white/5 hover:border-purple-500/40 transition-all group">
+                <i class="ph-fill ph-airplane-tilt text-base text-purple-400 group-hover:scale-110 transition-transform"></i>
+                <span>Zero-Internet / Airplane Mode (Visual Handshake)</span>
+            </button>
         </div>
 
         <!-- ================= ACTIVE VIEW ================= -->
@@ -481,6 +639,9 @@
                 </div>
                 
                 <div class="flex items-center gap-2.5">
+                    <button onclick="window.toggleScreenCast()" id="cast-screen-btn" class="glass-btn text-purple-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-purple-500/30 hover:border-purple-500/60 transition-all" title="Stream your screen live to connected devices">
+                        <i class="ph-bold ph-screencast text-sm"></i> <span id="cast-btn-text">Cast Screen</span>
+                    </button>
                     <button onclick="window.openAddPeerModal()" class="glass-btn text-blue-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-blue-500/30 hover:border-blue-500/60 transition-all">
                         <i class="ph-bold ph-user-plus text-sm"></i> Add Device
                     </button>
@@ -629,7 +790,7 @@
         let wakeLock = null;
         let fileQueue = [];
         let isTransferring = false;
-        let transferState = { role: null, file: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, senderPeerId: null };
+        let transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null, senderPeerId: null, lastCheckpointSave: 0 };
         let metrics = { totalBytes: 0, lastSampleTime: 0, lastSampleBytes: 0, speed: 0 };
         let receivedItemsCount = 0;
         let opfsAvailable = false;
@@ -637,6 +798,19 @@
         // Multi-Peer Mesh State
         const meshPeers = new Map(); // key: peerId -> { id, conn, name, iconInfo, e2ee: { ready, key, numbers, emojis } }
         let selectedTarget = 'all'; // 'all' or specific peerId
+
+        // Screen Casting State
+        let activeScreenStream = null;
+        const screenCastCalls = new Map(); // peerId -> call
+        let activeIncomingCall = null;
+
+        // Zero-Internet / Airplane Mode State
+        let offlinePeerConnection = null;
+        let offlineDataChannel = null;
+        let offlineHostQrInstance = null;
+        let offlineJoinQrInstance = null;
+        let cameraStream = null;
+        let cameraScanInterval = null;
 
         // PWA Web Share Target Pending Items
         let pendingSharedFiles = [];
@@ -1033,11 +1207,17 @@
                 meshPeers.delete(peerId);
                 showToast(`${p.name} left the room.`, 'info');
             }
+            if (screenCastCalls.has(peerId)) {
+                try { screenCastCalls.get(peerId).close(); } catch(e){}
+                screenCastCalls.delete(peerId);
+            }
             if (selectedTarget === peerId) selectedTarget = 'all';
             updateActiveViewUI();
         };
 
         window.disconnectAll = () => {
+            stopScreenCast();
+            window.closeScreencastModal();
             meshPeers.forEach(p => { if (p.conn) p.conn.close(); });
             meshPeers.clear();
             selectedTarget = 'all';
@@ -1152,6 +1332,32 @@
                     opfsAvailable = false;
                 }
             }
+        }
+
+        // =========================================
+        // FAULT-TOLERANT TRANSFER RESUME ENGINE
+        // =========================================
+        function getCheckpoint(fileId) {
+            try {
+                const map = JSON.parse(localStorage.getItem('webdrop_checkpoints') || '{}');
+                return map[fileId] || null;
+            } catch(e) { return null; }
+        }
+
+        function saveCheckpoint(fileId, data) {
+            try {
+                const map = JSON.parse(localStorage.getItem('webdrop_checkpoints') || '{}');
+                map[fileId] = { ...data, updatedAt: Date.now() };
+                localStorage.setItem('webdrop_checkpoints', JSON.stringify(map));
+            } catch(e) {}
+        }
+
+        function clearCheckpoint(fileId) {
+            try {
+                const map = JSON.parse(localStorage.getItem('webdrop_checkpoints') || '{}');
+                delete map[fileId];
+                localStorage.setItem('webdrop_checkpoints', JSON.stringify(map));
+            } catch(e) {}
         }
 
         function getDeviceName() {
@@ -1337,6 +1543,22 @@
                 showSecurityModal(connection.peer, deviceName);
             });
 
+            // Incoming Screen Cast Streams (PeerJS Media Calls)
+            peer.on('call', (call) => {
+                if (call.metadata?.type === 'screencast') {
+                    const hostName = call.metadata.hostName || 'Connected Device';
+                    call.answer(); // Answer without sending return media
+                    activeIncomingCall = call;
+                    call.on('stream', (remoteStream) => {
+                        openScreenCastViewer(remoteStream, hostName);
+                    });
+                    call.on('close', () => {
+                        const overlayMsg = document.getElementById('screencast-overlay-message');
+                        if (overlayMsg) overlayMsg.classList.remove('hidden');
+                    });
+                }
+            });
+
             peer.on('error', (err) => {
                 console.warn('PeerJS Error:', err);
                 if (err.type === 'peer-unavailable') {
@@ -1368,7 +1590,9 @@
                 { id: 'quicklook-modal-overlay', close: window.closeQuickLook },
                 { id: 'name-modal-overlay', close: window.closeDeviceNameModal },
                 { id: 'e2ee-modal-overlay', close: window.closeE2eeModal },
-                { id: 'add-peer-modal-overlay', close: window.closeAddPeerModal }
+                { id: 'add-peer-modal-overlay', close: window.closeAddPeerModal },
+                { id: 'screencast-modal-overlay', close: window.closeScreencastModal },
+                { id: 'offline-modal-overlay', close: window.closeOfflineModal }
             ];
 
             overlays.forEach(({ id, close }) => {
@@ -1387,6 +1611,8 @@
                     window.closeQrModal();
                     window.closeE2eeModal();
                     window.closeAddPeerModal();
+                    window.closeScreencastModal();
+                    window.closeOfflineModal();
                 }
             });
         }
@@ -1737,8 +1963,9 @@
             requestWakeLock();
             isTransferring = true;
             const file = fileQueue.shift();
+            const fileId = `${file.name}_${file.size}_${file.lastModified}`;
             
-            transferState = { role: 'sender', file: file, offset: 0, acksReceived: 0, targetCount: targets.length };
+            transferState = { role: 'sender', file: file, fileId: fileId, offset: 0, acksReceived: 0, targetCount: targets.length };
             initTransferMetrics(file.size);
             showTransferUI('sender', file.name, fileQueue.length);
 
@@ -1747,6 +1974,7 @@
                     t.conn.send(JSON.stringify({ 
                         type: 'meta', 
                         senderName: getSavedDeviceName(),
+                        fileId: fileId,
                         name: file.name, 
                         size: file.size, 
                         mime: file.type || 'application/octet-stream' 
@@ -1755,14 +1983,16 @@
             });
         }
 
-        async function streamChunks(file) {
+        async function streamChunks(file, startOffset = 0) {
             const targets = getTargetPeers();
-            transferState.offset = 0;
+            transferState.offset = startOffset;
             initTransferMetrics(file.size);
+            metrics.lastSampleBytes = startOffset;
+            updateTransferMetrics(transferState.offset, file.size);
 
             while (transferState.offset < file.size && isTransferring && targets.some(t => t.conn && t.conn.open)) {
                 // Backpressure flow control across all active targets
-                const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || 0));
+                const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || t.conn?.bufferedAmount || 0));
                 if (maxBuffered > HIGH_WATER_MARK) {
                     await new Promise(resolve => setTimeout(resolve, 30));
                     if (!isTransferring) return;
@@ -1806,7 +2036,7 @@
                 // Wait for all targets to drain before sending EOF
                 const waitForDrain = () => {
                     if (!isTransferring) return;
-                    const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || 0));
+                    const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || t.conn?.bufferedAmount || 0));
                     if (maxBuffered > 0) {
                         setTimeout(waitForDrain, 25);
                     } else {
@@ -1834,41 +2064,79 @@
                     }
                 } else if (msg.type === 'meta') {
                     requestWakeLock();
+                    let resumeOffset = 0;
+                    let opfsHandle = null;
+                    let opfsWritable = null;
+                    let opfsName = null;
+
+                    const cp = msg.fileId ? getCheckpoint(msg.fileId) : null;
+                    if (opfsAvailable && cp && cp.offset > 0 && cp.offset < msg.size && cp.opfsName) {
+                        try {
+                            const root = await navigator.storage.getDirectory();
+                            const existingHandle = await root.getFileHandle(cp.opfsName, { create: false });
+                            const fileObj = await existingHandle.getFile();
+                            if (fileObj.size >= cp.offset) {
+                                const writable = await existingHandle.createWritable({ keepExistingData: true });
+                                await writable.seek(cp.offset);
+                                opfsHandle = existingHandle;
+                                opfsWritable = writable;
+                                opfsName = cp.opfsName;
+                                resumeOffset = cp.offset;
+                                showToast(`Resuming "${msg.name}" from ${formatBytes(cp.offset)}!`, 'info');
+                            }
+                        } catch(err) {
+                            console.warn('Could not resume existing OPFS checkpoint, starting fresh:', err);
+                            if (msg.fileId) clearCheckpoint(msg.fileId);
+                        }
+                    }
+
+                    if (!opfsWritable && opfsAvailable) {
+                        try {
+                            const root = await navigator.storage.getDirectory();
+                            opfsName = `wd_${Date.now()}_${msg.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+                            const fileHandle = await root.getFileHandle(opfsName, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            opfsHandle = fileHandle;
+                            opfsWritable = writable;
+                            resumeOffset = 0;
+                            if (msg.fileId) saveCheckpoint(msg.fileId, { opfsName, size: msg.size, offset: 0 });
+                        } catch(err) {
+                            opfsHandle = null;
+                            opfsWritable = null;
+                            opfsName = null;
+                            resumeOffset = 0;
+                        }
+                    }
+
                     transferState = { 
                         role: 'receiver', 
                         receivedBuffers: [], 
-                        receivedBytes: 0, 
+                        receivedBytes: resumeOffset, 
                         meta: msg,
-                        opfsHandle: null,
-                        opfsWritable: null,
+                        opfsHandle: opfsHandle,
+                        opfsWritable: opfsWritable,
+                        opfsName: opfsName,
+                        lastCheckpointSave: resumeOffset,
                         senderPeerId: senderPeerId,
                         senderName: msg.senderName || peerRecord?.name || 'Peer'
                     };
 
-                    if (opfsAvailable) {
-                        try {
-                            const root = await navigator.storage.getDirectory();
-                            const safeName = `wd_${Date.now()}_${msg.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-                            const fileHandle = await root.getFileHandle(safeName, { create: true });
-                            const writable = await fileHandle.createWritable();
-                            transferState.opfsHandle = fileHandle;
-                            transferState.opfsWritable = writable;
-                        } catch(err) {
-                            transferState.opfsHandle = null;
-                            transferState.opfsWritable = null;
-                        }
-                    }
-
                     initTransferMetrics(msg.size);
+                    metrics.lastSampleBytes = resumeOffset;
                     showTransferUI('receiver', msg.name, 0);
-                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready' }));
+                    updateTransferMetrics(resumeOffset, msg.size);
+                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready', resumeOffset: resumeOffset }));
 
                 } else if (msg.type === 'ready') {
                     if (transferState.role === 'sender' && transferState.file) {
-                        streamChunks(transferState.file);
+                        const resumeOffset = Number(msg.resumeOffset) || 0;
+                        if (resumeOffset > 0) {
+                            showToast(`Peer resuming transfer from ${formatBytes(resumeOffset)}!`, 'info');
+                        }
+                        streamChunks(transferState.file, resumeOffset);
                     }
                 } else if (msg.type === 'cancel') {
-                    await handleTransferCancelled('Transfer was cancelled by peer.');
+                    await handleTransferCancelled('Transfer was cancelled by peer.', true);
                 } else if (msg.type === 'text_snippet') {
                     addTextToHistory(msg.text, 'received', msg.senderName || peerRecord?.name);
                     showToast(`Received text snippet from ${msg.senderName || 'peer'}!`, 'info');
@@ -1897,6 +2165,9 @@
                         renderPeerChips();
                         showToast(`Device renamed to "${msg.name}"`, 'info');
                     }
+                } else if (msg.type === 'screencast_stopped') {
+                    window.closeScreencastModal();
+                    showToast('Screen cast presentation ended', 'info');
                 } else if (msg.type === 'eof') {
                     await assembleAndDownloadReceivedFile();
                     peerRecord?.conn?.send(JSON.stringify({ type: 'eof_ack' }));
@@ -1943,30 +2214,49 @@
 
                 state.receivedBytes += (chunkData.byteLength || data.byteLength);
                 updateTransferMetrics(state.receivedBytes, state.meta.size);
+
+                // Checkpoint periodically (every 512 KB) for transfer resume resilience
+                if (state.opfsWritable && state.meta?.fileId && state.opfsName) {
+                    if (!state.lastCheckpointSave || (state.receivedBytes - state.lastCheckpointSave >= 512 * 1024)) {
+                        saveCheckpoint(state.meta.fileId, { opfsName: state.opfsName, size: state.meta.size, offset: state.receivedBytes });
+                        state.lastCheckpointSave = state.receivedBytes;
+                    }
+                }
             }
         }
 
         window.cancelTransfer = async () => {
             if (!isTransferring) return;
+            if (transferState.meta?.fileId) clearCheckpoint(transferState.meta.fileId);
+            if (transferState.fileId) clearCheckpoint(transferState.fileId);
             getTargetPeers().forEach(t => {
                 if (t.conn && t.conn.open) t.conn.send(JSON.stringify({ type: 'cancel' }));
             });
-            await handleTransferCancelled('You cancelled the transfer.');
+            await handleTransferCancelled('You cancelled the transfer.', true);
         };
 
-        async function handleTransferCancelled(reason) {
+        async function handleTransferCancelled(reason, shouldClearCheckpoint = false) {
             isTransferring = false;
             
             if (transferState.opfsWritable) {
-                try { await transferState.opfsWritable.abort(); } catch(e){}
+                try {
+                    if (shouldClearCheckpoint) {
+                        await transferState.opfsWritable.abort();
+                    } else {
+                        await transferState.opfsWritable.close();
+                    }
+                } catch(e){}
                 transferState.opfsWritable = null;
             }
-            if (transferState.opfsHandle) {
-                try { await transferState.opfsHandle.remove(); } catch(e){}
-                transferState.opfsHandle = null;
+            if (shouldClearCheckpoint) {
+                if (transferState.meta?.fileId) clearCheckpoint(transferState.meta.fileId);
+                if (transferState.opfsHandle) {
+                    try { await transferState.opfsHandle.remove(); } catch(e){}
+                    transferState.opfsHandle = null;
+                }
             }
 
-            transferState = { role: null, file: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null };
+            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null };
             document.getElementById('transfer-overlay').classList.add('hidden');
             releaseWakeLock();
             showToast(reason, 'warn');
@@ -1975,6 +2265,10 @@
         async function assembleAndDownloadReceivedFile() {
             const state = transferState;
             let fileOrBlob = null;
+
+            if (state.meta?.fileId) {
+                clearCheckpoint(state.meta.fileId);
+            }
 
             if (state.opfsWritable && state.opfsHandle) {
                 try {
@@ -2325,6 +2619,480 @@
         function releaseWakeLock() {
             if (wakeLock) { wakeLock.release().then(() => { wakeLock = null; }); }
         }
+
+        // =========================================
+        // LIVE SCREEN CASTING & PRESENTATION ENGINE
+        // =========================================
+        function updateScreenCastUI(isCasting) {
+            const btn = document.getElementById('cast-screen-btn');
+            const txt = document.getElementById('cast-btn-text');
+            if (!btn || !txt) return;
+
+            if (isCasting) {
+                btn.className = 'glass-btn bg-red-500/20 text-red-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-red-500/40 hover:border-red-500/70 transition-all shadow-lg shadow-red-500/10 animate-pulse';
+                txt.innerText = 'Stop Casting';
+            } else {
+                btn.className = 'glass-btn text-purple-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-purple-500/30 hover:border-purple-500/60 transition-all';
+                txt.innerText = 'Cast Screen';
+            }
+        }
+
+        window.toggleScreenCast = async () => {
+            if (activeScreenStream) {
+                stopScreenCast();
+                return;
+            }
+
+            if (meshPeers.size === 0) {
+                showToast('Connect to a device first to cast screen', 'warn');
+                return;
+            }
+
+            if (!navigator.mediaDevices?.getDisplayMedia) {
+                showToast('Screen casting is not supported on this browser', 'error');
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        frameRate: { ideal: 60, max: 60 },
+                        cursor: 'always'
+                    },
+                    audio: true
+                });
+
+                activeScreenStream = stream;
+                updateScreenCastUI(true);
+
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.onended = () => {
+                        stopScreenCast();
+                    };
+                }
+
+                meshPeers.forEach((p) => {
+                    if (peer && p.conn && p.conn.open) {
+                        try {
+                            const call = peer.call(p.id, stream, {
+                                metadata: { type: 'screencast', hostName: getSavedDeviceName() }
+                            });
+                            screenCastCalls.set(p.id, call);
+                        } catch(err) {
+                            console.warn('Could not call peer for screencast:', p.id, err);
+                        }
+                    }
+                });
+
+                showToast('Screen cast started at 60 FPS!', 'success');
+            } catch(err) {
+                if (err.name !== 'NotAllowedError') {
+                    showToast(`Could not start screen cast: ${err.message}`, 'error');
+                }
+            }
+        };
+
+        function stopScreenCast() {
+            if (activeScreenStream) {
+                activeScreenStream.getTracks().forEach(track => track.stop());
+                activeScreenStream = null;
+            }
+
+            screenCastCalls.forEach(call => {
+                try { call.close(); } catch(e){}
+            });
+            screenCastCalls.clear();
+
+            meshPeers.forEach(p => {
+                if (p.conn && p.conn.open) {
+                    try { p.conn.send(JSON.stringify({ type: 'screencast_stopped' })); } catch(e){}
+                }
+            });
+
+            updateScreenCastUI(false);
+            showToast('Screen casting stopped', 'info');
+        }
+
+        function openScreenCastViewer(remoteStream, hostName) {
+            const overlay = document.getElementById('screencast-modal-overlay');
+            const card = document.getElementById('screencast-modal-card');
+            const video = document.getElementById('screencast-video');
+            const title = document.getElementById('screencast-title');
+            const overlayMsg = document.getElementById('screencast-overlay-message');
+
+            if (overlayMsg) overlayMsg.classList.add('hidden');
+            if (title) title.innerText = `${hostName}'s Screen`;
+            if (video) {
+                video.srcObject = remoteStream;
+                video.play().catch(()=>{});
+            }
+
+            overlay.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            });
+            showToast(`Viewing screen stream from ${hostName}`, 'info');
+        }
+
+        window.closeScreencastModal = () => {
+            const overlay = document.getElementById('screencast-modal-overlay');
+            const card = document.getElementById('screencast-modal-card');
+            const video = document.getElementById('screencast-video');
+
+            if (video) {
+                video.pause();
+                video.srcObject = null;
+            }
+
+            if (overlay && card) {
+                overlay.classList.add('opacity-0');
+                card.classList.add('scale-95');
+                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+            }
+
+            if (activeIncomingCall) {
+                try { activeIncomingCall.close(); } catch(e){}
+                activeIncomingCall = null;
+            }
+        };
+
+        window.toggleScreencastPip = async () => {
+            const video = document.getElementById('screencast-video');
+            if (!video) return;
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else if (document.pictureInPictureEnabled) {
+                    await video.requestPictureInPicture();
+                }
+            } catch(e) {
+                showToast('Picture-in-Picture not available', 'warn');
+            }
+        };
+
+        window.toggleScreencastFullscreen = async () => {
+            const video = document.getElementById('screencast-video');
+            if (!video) return;
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                } else {
+                    await video.requestFullscreen();
+                }
+            } catch(e) {
+                showToast('Fullscreen not available', 'warn');
+            }
+        };
+
+        // =========================================
+        // ZERO-INTERNET / AIRPLANE MODE (OFFLINE P2P)
+        // =========================================
+        window.openOfflineModal = () => {
+            const overlay = document.getElementById('offline-modal-overlay');
+            const card = document.getElementById('offline-modal-card');
+            overlay.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            });
+            window.switchOfflineRole('host');
+        };
+
+        window.closeOfflineModal = () => {
+            window.stopCameraScanner();
+            const overlay = document.getElementById('offline-modal-overlay');
+            const card = document.getElementById('offline-modal-card');
+            if (overlay && card) {
+                overlay.classList.add('opacity-0');
+                card.classList.add('scale-95');
+                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+            }
+        };
+
+        window.switchOfflineRole = (role) => {
+            window.stopCameraScanner();
+            const hostTab = document.getElementById('offline-tab-host');
+            const joinTab = document.getElementById('offline-tab-join');
+            const hostView = document.getElementById('offline-host-view');
+            const joinView = document.getElementById('offline-join-view');
+
+            if (role === 'host') {
+                hostTab.className = 'py-2 rounded-lg bg-white/10 text-white transition-all cursor-pointer';
+                joinTab.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer';
+                hostView.classList.remove('hidden');
+                joinView.classList.add('hidden');
+                initOfflineHost();
+            } else {
+                joinTab.className = 'py-2 rounded-lg bg-white/10 text-white transition-all cursor-pointer';
+                hostTab.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer';
+                joinView.classList.remove('hidden');
+                hostView.classList.add('hidden');
+            }
+        };
+
+        async function initOfflineHost() {
+            if (offlinePeerConnection) {
+                try { offlinePeerConnection.close(); } catch(e){}
+            }
+
+            offlinePeerConnection = new RTCPeerConnection({ iceServers: [] });
+            offlineDataChannel = offlinePeerConnection.createDataChannel('webdrop-offline', { ordered: true });
+            bindOfflineDataChannel(offlineDataChannel, 'Device 2 (Joiner)');
+
+            const offer = await offlinePeerConnection.createOffer();
+            await offlinePeerConnection.setLocalDescription(offer);
+
+            await new Promise(resolve => {
+                if (offlinePeerConnection.iceGatheringState === 'complete') return resolve();
+                const check = () => {
+                    if (offlinePeerConnection.iceGatheringState === 'complete') {
+                        offlinePeerConnection.removeEventListener('icegatheringstatechange', check);
+                        resolve();
+                    }
+                };
+                offlinePeerConnection.addEventListener('icegatheringstatechange', check);
+                setTimeout(resolve, 1500);
+            });
+
+            const token = btoa(JSON.stringify({ t: 'o', s: offlinePeerConnection.localDescription.sdp }));
+            const tokenEl = document.getElementById('offline-host-token');
+            if (tokenEl) tokenEl.value = token;
+
+            const qrContainer = document.getElementById('offline-host-qrcode');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                try {
+                    offlineHostQrInstance = new QRCode(qrContainer, {
+                        text: token,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#09090b",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
+                } catch(e) {
+                    console.warn('QR Code generation error:', e);
+                }
+            }
+        }
+
+        window.applyOfflineOffer = async (tokenStr) => {
+            const input = document.getElementById('offline-offer-input');
+            const raw = (tokenStr || input?.value || '').trim();
+            if (!raw) {
+                showToast('Please paste or scan Device 1 offer token', 'warn');
+                return;
+            }
+
+            let offerObj;
+            try {
+                offerObj = JSON.parse(atob(raw));
+                if (offerObj.t !== 'o' || !offerObj.s) throw new Error('Invalid format');
+            } catch(e) {
+                showToast('Invalid Offer Handshake Token', 'error');
+                return;
+            }
+
+            if (offlinePeerConnection) {
+                try { offlinePeerConnection.close(); } catch(e){}
+            }
+
+            offlinePeerConnection = new RTCPeerConnection({ iceServers: [] });
+            offlinePeerConnection.ondatachannel = (e) => {
+                offlineDataChannel = e.channel;
+                bindOfflineDataChannel(offlineDataChannel, 'Device 1 (Host)');
+            };
+
+            await offlinePeerConnection.setRemoteDescription({ type: 'offer', sdp: offerObj.s });
+            const answer = await offlinePeerConnection.createAnswer();
+            await offlinePeerConnection.setLocalDescription(answer);
+
+            await new Promise(resolve => {
+                if (offlinePeerConnection.iceGatheringState === 'complete') return resolve();
+                const check = () => {
+                    if (offlinePeerConnection.iceGatheringState === 'complete') {
+                        offlinePeerConnection.removeEventListener('icegatheringstatechange', check);
+                        resolve();
+                    }
+                };
+                offlinePeerConnection.addEventListener('icegatheringstatechange', check);
+                setTimeout(resolve, 1500);
+            });
+
+            const answerToken = btoa(JSON.stringify({ t: 'a', s: offlinePeerConnection.localDescription.sdp }));
+            const answerCard = document.getElementById('offline-join-answer-card');
+            const answerTokenEl = document.getElementById('offline-join-token');
+            const answerQrContainer = document.getElementById('offline-join-qrcode');
+
+            if (answerTokenEl) answerTokenEl.value = answerToken;
+            if (answerQrContainer) {
+                answerQrContainer.innerHTML = '';
+                try {
+                    offlineJoinQrInstance = new QRCode(answerQrContainer, {
+                        text: answerToken,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#09090b",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
+                } catch(e){}
+            }
+
+            if (answerCard) answerCard.classList.remove('hidden');
+            showToast('Answer token ready! Device 1 can now scan/paste it.', 'success');
+        };
+
+        window.applyOfflineAnswer = async (tokenStr) => {
+            const input = document.getElementById('offline-answer-input');
+            const raw = (tokenStr || input?.value || '').trim();
+            if (!raw) {
+                showToast('Please paste or scan Device 2 answer token', 'warn');
+                return;
+            }
+
+            let answerObj;
+            try {
+                answerObj = JSON.parse(atob(raw));
+                if (answerObj.t !== 'a' || !answerObj.s) throw new Error('Invalid format');
+            } catch(e) {
+                showToast('Invalid Answer Handshake Token', 'error');
+                return;
+            }
+
+            if (!offlinePeerConnection) {
+                showToast('Offline session not initialized on host', 'error');
+                return;
+            }
+
+            try {
+                await offlinePeerConnection.setRemoteDescription({ type: 'answer', sdp: answerObj.s });
+                showToast('Connecting via local WebRTC...', 'info');
+            } catch(err) {
+                showToast(`Handshake failed: ${err.message}`, 'error');
+            }
+        };
+
+        function bindOfflineDataChannel(channel, peerName) {
+            channel.binaryType = 'arraybuffer';
+            const offlinePeerId = 'offline_' + Math.floor(1000 + Math.random() * 9000);
+
+            const mockConn = {
+                peer: offlinePeerId,
+                open: false,
+                dataChannel: channel,
+                get bufferedAmount() { return channel.bufferedAmount; },
+                send: (d) => {
+                    if (channel.readyState === 'open') channel.send(d);
+                },
+                close: () => {
+                    try { channel.close(); } catch(e){}
+                },
+                metadata: { deviceName: peerName }
+            };
+
+            channel.onopen = () => {
+                mockConn.open = true;
+                const peerRecord = {
+                    id: offlinePeerId,
+                    conn: mockConn,
+                    name: peerName,
+                    iconInfo: { icon: 'ph-airplane-tilt', color: 'text-purple-400' },
+                    e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false }
+                };
+
+                meshPeers.set(offlinePeerId, peerRecord);
+                setupPeerE2EE(peerRecord);
+                window.closeOfflineModal();
+                updateActiveViewUI();
+                showToast(`Connected to ${peerName} (Airplane Mode)!`, 'success');
+            };
+
+            channel.onmessage = (e) => {
+                handleIncomingData(e.data, offlinePeerId);
+            };
+
+            channel.onclose = () => {
+                mockConn.open = false;
+                window.disconnectPeer(offlinePeerId);
+            };
+
+            channel.onerror = (err) => {
+                console.warn('Offline channel error:', err);
+            };
+        }
+
+        window.copyOfflineToken = async (role) => {
+            const id = role === 'host' ? 'offline-host-token' : 'offline-join-token';
+            const el = document.getElementById(id);
+            if (!el || !el.value) return;
+            try {
+                await navigator.clipboard.writeText(el.value);
+                showToast('Token copied to clipboard!', 'success');
+            } catch(e) {
+                prompt('Copy token:', el.value);
+            }
+        };
+
+        window.toggleCameraScanner = async (role) => {
+            const container = document.getElementById('scanner-container');
+            const video = document.getElementById('scanner-video');
+
+            if (cameraStream) {
+                window.stopCameraScanner();
+                return;
+            }
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } }
+                });
+                video.srcObject = cameraStream;
+                container.classList.remove('hidden');
+
+                if ('BarcodeDetector' in window) {
+                    const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+                    cameraScanInterval = setInterval(async () => {
+                        if (!cameraStream || video.readyState < 2) return;
+                        try {
+                            const barcodes = await detector.detect(video);
+                            if (barcodes.length > 0) {
+                                const code = barcodes[0].rawValue;
+                                window.stopCameraScanner();
+                                if (role === 'host') {
+                                    document.getElementById('offline-answer-input').value = code;
+                                    window.applyOfflineAnswer(code);
+                                } else {
+                                    document.getElementById('offline-offer-input').value = code;
+                                    window.applyOfflineOffer(code);
+                                }
+                            }
+                        } catch(e){}
+                    }, 200);
+                } else {
+                    showToast('Camera active. If QR is not auto-read, paste the token above.', 'info');
+                }
+            } catch(err) {
+                showToast('Camera access denied or unavailable', 'warn');
+            }
+        };
+
+        window.stopCameraScanner = () => {
+            if (cameraScanInterval) {
+                clearInterval(cameraScanInterval);
+                cameraScanInterval = null;
+            }
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            const container = document.getElementById('scanner-container');
+            if (container) container.classList.add('hidden');
+            const video = document.getElementById('scanner-video');
+            if (video) video.srcObject = null;
+        };
 
         window.copyInviteLink = async () => {
             const url = `${window.location.origin}${window.location.pathname}?c=${myPin}`;
