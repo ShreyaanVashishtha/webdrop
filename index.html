@@ -926,7 +926,7 @@
         let wakeLock = null;
         let fileQueue = [];
         let isTransferring = false;
-        let transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null, senderPeerId: null, lastCheckpointSave: 0 };
+        let transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null, senderPeerId: null };
         let metrics = { totalBytes: 0, lastSampleTime: 0, lastSampleBytes: 0, speed: 0 };
         let receivedItemsCount = 0;
         let opfsAvailable = false;
@@ -2459,63 +2459,14 @@
                 } else if (msg.type === 'meta') {
                     requestWakeLock();
                     isTransferring = true;
-                    let resumeOffset = 0;
-                    let opfsHandle = null;
-                    let opfsWritable = null;
-                    let opfsName = null;
-
-                    const cp = msg.fileId ? getCheckpoint(msg.fileId) : null;
-                    if (opfsAvailable && cp && cp.offset > 0 && cp.offset < msg.size && cp.opfsName) {
-                        try {
-                            const root = await navigator.storage.getDirectory();
-                            const existingHandle = await root.getFileHandle(cp.opfsName, { create: false });
-                            const fileObj = await existingHandle.getFile();
-                            if (fileObj.size >= cp.offset) {
-                                const writable = await existingHandle.createWritable({ keepExistingData: true });
-                                await writable.seek(cp.offset);
-                                opfsHandle = existingHandle;
-                                opfsWritable = writable;
-                                opfsName = cp.opfsName;
-                                resumeOffset = cp.offset;
-                                showToast(`Resuming "${msg.name}" from ${formatBytes(cp.offset)}!`, 'info');
-                            }
-                        } catch(err) {
-                            console.warn('Could not resume existing OPFS checkpoint, starting fresh:', err);
-                            if (msg.fileId) clearCheckpoint(msg.fileId);
-                        }
-                    }
-
-                    if (!opfsWritable && opfsAvailable) {
-                        try {
-                            const root = await navigator.storage.getDirectory();
-                            opfsName = `wd_${Date.now()}_${msg.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-                            const fileHandle = await root.getFileHandle(opfsName, { create: true });
-                            const writable = await fileHandle.createWritable();
-                            opfsHandle = fileHandle;
-                            opfsWritable = writable;
-                            resumeOffset = 0;
-                            if (msg.fileId) saveCheckpoint(msg.fileId, { opfsName, size: msg.size, offset: 0 });
-                        } catch(err) {
-                            opfsHandle = null;
-                            opfsWritable = null;
-                            opfsName = null;
-                            resumeOffset = 0;
-                        }
-                    }
 
                     transferState = { 
                         role: 'receiver', 
                         receivedBuffers: [], 
                         receivedChunks: {},
                         receivedChunkIndices: new Set(),
-                        contiguousChunkIndex: Math.floor(resumeOffset / CHUNK_SIZE),
-                        receivedBytes: resumeOffset, 
+                        receivedBytes: 0, 
                         meta: msg,
-                        opfsHandle: opfsHandle,
-                        opfsWritable: opfsWritable,
-                        opfsName: opfsName,
-                        opfsWritePromise: null,
-                        lastCheckpointSave: resumeOffset,
                         senderPeerId: senderPeerId,
                         senderName: msg.senderName || peerRecord?.name || 'Peer',
                         eofReceived: false,
@@ -2524,18 +2475,13 @@
                     };
 
                     initTransferMetrics(msg.size);
-                    metrics.lastSampleBytes = resumeOffset;
                     showTransferUI('receiver', msg.name, 0);
-                    updateTransferMetrics(resumeOffset, msg.size);
-                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready', resumeOffset: resumeOffset }));
+                    updateTransferMetrics(0, msg.size);
+                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready', resumeOffset: 0 }));
 
                 } else if (msg.type === 'ready') {
                     if (transferState.role === 'sender' && transferState.file) {
-                        const resumeOffset = Number(msg.resumeOffset) || 0;
-                        if (resumeOffset > 0) {
-                            showToast(`Peer resuming transfer from ${formatBytes(resumeOffset)}!`, 'info');
-                        }
-                        streamChunks(transferState.file, resumeOffset);
+                        streamChunks(transferState.file, 0);
                     }
                 } else if (msg.type === 'cancel') {
                     await handleTransferCancelled('Transfer was cancelled by peer.', true);
@@ -2603,20 +2549,34 @@
                 let chunkIndex = 0;
                 let chunkData = null;
 
-                if (rawBytes[0] === 0xEF && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 17) {
+                if (rawBytes[0] === 0xEF && rawBytes.byteLength > 17) {
                     // Sequenced E2EE chunk: [ 0xEF (1) | chunkIndex (4) | IV (12) | ciphertext ]
                     const dv = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
                     chunkIndex = dv.getUint32(1, false);
                     const iv = rawBytes.slice(5, 17);
                     const ciphertext = rawBytes.slice(17);
-                    try {
-                        chunkData = await window.crypto.subtle.decrypt(
-                            { name: "AES-GCM", iv: iv },
-                            peerRecord.e2ee.key,
-                            ciphertext
-                        );
-                    } catch(e) {
-                        console.error('Failed to decrypt sequenced chunk:', e);
+
+                    if (!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) {
+                        let waitMs = 0;
+                        while ((!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) && waitMs < 2000) {
+                            await new Promise(r => setTimeout(r, 50));
+                            waitMs += 50;
+                        }
+                    }
+
+                    if (peerRecord?.e2ee?.ready && peerRecord?.e2ee?.key) {
+                        try {
+                            chunkData = await window.crypto.subtle.decrypt(
+                                { name: "AES-GCM", iv: iv },
+                                peerRecord.e2ee.key,
+                                ciphertext
+                            );
+                        } catch(e) {
+                            console.error('Failed to decrypt sequenced chunk:', e);
+                            return;
+                        }
+                    } else {
+                        console.error('E2EE key not available for chunk', chunkIndex);
                         return;
                     }
                 } else if (rawBytes[0] === 0xD0 && rawBytes.byteLength >= 5) {
@@ -2630,20 +2590,31 @@
                     } else {
                         chunkData = rawBytes.slice(5).buffer;
                     }
-                } else if (rawBytes[0] === 0xEE && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 13) {
+                } else if (rawBytes[0] === 0xEE && rawBytes.byteLength > 13) {
                     // Legacy un-sequenced E2EE chunk: [ 0xEE (1) | IV (12) | ciphertext ]
                     chunkIndex = state.nextLegacyIdx || 0;
                     state.nextLegacyIdx = chunkIndex + 1;
                     const iv = rawBytes.slice(1, 13);
                     const ciphertext = rawBytes.slice(13);
-                    try {
-                        chunkData = await window.crypto.subtle.decrypt(
-                            { name: "AES-GCM", iv: iv },
-                            peerRecord.e2ee.key,
-                            ciphertext
-                        );
-                    } catch(e) {
-                        console.error('Failed to decrypt legacy chunk:', e);
+                    if (!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) {
+                        let waitMs = 0;
+                        while ((!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) && waitMs < 2000) {
+                            await new Promise(r => setTimeout(r, 50));
+                            waitMs += 50;
+                        }
+                    }
+                    if (peerRecord?.e2ee?.ready && peerRecord?.e2ee?.key) {
+                        try {
+                            chunkData = await window.crypto.subtle.decrypt(
+                                { name: "AES-GCM", iv: iv },
+                                peerRecord.e2ee.key,
+                                ciphertext
+                            );
+                        } catch(e) {
+                            console.error('Failed to decrypt legacy chunk:', e);
+                            return;
+                        }
+                    } else {
                         return;
                     }
                 } else {
@@ -2660,47 +2631,12 @@
                 if (state.receivedChunkIndices.has(chunkIndex)) return;
                 state.receivedChunkIndices.add(chunkIndex);
 
-                const chunkOffset = chunkIndex * CHUNK_SIZE;
-
-                // Resilient in-memory backup for files <= 50MB
-                if (state.meta && state.meta.size <= 50 * 1024 * 1024) {
-                    if (!state.receivedChunks) state.receivedChunks = {};
-                    state.receivedChunks[chunkIndex] = chunkData;
-                }
-
-                if (state.opfsWritable) {
-                    state.opfsWritePromise = (state.opfsWritePromise || Promise.resolve()).then(async () => {
-                        if (state.opfsWritable) {
-                            await state.opfsWritable.seek(chunkOffset);
-                            await state.opfsWritable.write(chunkData);
-                        }
-                    }).catch(err => {
-                        console.warn('OPFS seek/write error, falling back to memory chunks:', err);
-                        state.opfsWritable = null;
-                        if (!state.receivedChunks) state.receivedChunks = {};
-                        state.receivedChunks[chunkIndex] = chunkData;
-                    });
-                } else {
-                    if (!state.receivedChunks) state.receivedChunks = {};
-                    state.receivedChunks[chunkIndex] = chunkData;
-                }
+                // Always index in memory by chunk sequence
+                if (!state.receivedChunks) state.receivedChunks = {};
+                state.receivedChunks[chunkIndex] = chunkData;
 
                 state.receivedBytes += (chunkData.byteLength || 0);
                 updateTransferMetrics(state.receivedBytes, state.meta.size);
-
-                // Checkpoint periodically (every 512 KB) with strictly contiguous safe byte offset
-                state.contiguousChunkIndex = state.contiguousChunkIndex || 0;
-                while (state.receivedChunkIndices.has(state.contiguousChunkIndex)) {
-                    state.contiguousChunkIndex++;
-                }
-                const safeCheckpointOffset = Math.min(state.contiguousChunkIndex * CHUNK_SIZE, state.meta.size);
-
-                if (state.opfsWritable && state.meta?.fileId && state.opfsName) {
-                    if (!state.lastCheckpointSave || (safeCheckpointOffset - state.lastCheckpointSave >= 512 * 1024)) {
-                        saveCheckpoint(state.meta.fileId, { opfsName: state.opfsName, size: state.meta.size, offset: safeCheckpointOffset });
-                        state.lastCheckpointSave = safeCheckpointOffset;
-                    }
-                }
 
                 // Check if EOF was already signaled and this arrived chunk completes the file
                 if (state.eofReceived) {
@@ -2728,28 +2664,11 @@
         async function handleTransferCancelled(reason, shouldClearCheckpoint = false) {
             isTransferring = false;
             
-            if (transferState.opfsWritable) {
-                try {
-                    if (transferState.opfsWritePromise) {
-                        await transferState.opfsWritePromise.catch(() => {});
-                    }
-                    if (shouldClearCheckpoint) {
-                        await transferState.opfsWritable.abort();
-                    } else {
-                        await transferState.opfsWritable.close();
-                    }
-                } catch(e){}
-                transferState.opfsWritable = null;
-            }
-            if (shouldClearCheckpoint) {
-                if (transferState.meta?.fileId) clearCheckpoint(transferState.meta.fileId);
-                if (transferState.opfsHandle) {
-                    try { await transferState.opfsHandle.remove(); } catch(e){}
-                    transferState.opfsHandle = null;
-                }
+            if (shouldClearCheckpoint && transferState.meta?.fileId) {
+                clearCheckpoint(transferState.meta.fileId);
             }
 
-            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null };
+            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null };
             document.getElementById('transfer-overlay').classList.add('hidden');
             releaseWakeLock();
             showToast(reason, 'warn');
@@ -2767,39 +2686,33 @@
                 clearCheckpoint(state.meta.fileId);
             }
 
-            if (state.opfsWritable && state.opfsHandle) {
-                try {
-                    if (state.opfsWritePromise) {
-                        await state.opfsWritePromise;
-                    }
-                    await state.opfsWritable.close();
-                    state.opfsWritable = null;
-                    const opfsFile = await state.opfsHandle.getFile();
-                    if (opfsFile && opfsFile.size > 0) {
-                        fileOrBlob = opfsFile;
-                    }
-                } catch(e) {
-                    console.error('Error finalizing OPFS file, falling back to memory chunks:', e);
+            // Assemble file from ordered in-memory chunks
+            const chunksObj = state.receivedChunks || {};
+            const totalChunks = Math.ceil((state.meta?.size || 0) / CHUNK_SIZE);
+            const orderedBuffers = [];
+            for (let i = 0; i < totalChunks; i++) {
+                if (chunksObj[i]) {
+                    orderedBuffers.push(chunksObj[i]);
                 }
             }
 
-            if (!fileOrBlob) {
-                const chunksObj = state.receivedChunks || {};
-                const totalChunks = Math.ceil((state.meta?.size || 0) / CHUNK_SIZE);
-                const orderedBuffers = [];
-                for (let i = 0; i < totalChunks; i++) {
-                    if (chunksObj[i]) {
-                        orderedBuffers.push(chunksObj[i]);
-                    }
-                }
-                if (orderedBuffers.length === 0 && state.receivedBuffers && state.receivedBuffers.length > 0) {
-                    fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
-                } else {
-                    fileOrBlob = new Blob(orderedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
-                }
+            if (orderedBuffers.length > 0) {
+                fileOrBlob = new Blob(orderedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
+            } else if (state.receivedBuffers && state.receivedBuffers.length > 0) {
+                fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
+            } else if (state.meta?.size === 0) {
+                fileOrBlob = new Blob([], { type: state.meta?.mime || 'application/octet-stream' });
             }
 
-            addFileToHistory(fileOrBlob, state.meta?.name || 'download', state.meta?.size || fileOrBlob?.size || 0, state.senderName);
+            if (!fileOrBlob || (fileOrBlob.size === 0 && (state.meta?.size || 0) > 0)) {
+                console.error('Assembled file is empty or missing chunks');
+                showToast('Failed to assemble received file.', 'error');
+                document.getElementById('transfer-overlay').classList.add('hidden');
+                releaseWakeLock();
+                return;
+            }
+
+            addFileToHistory(fileOrBlob, state.meta?.name || 'download', state.meta?.size || fileOrBlob.size, state.senderName);
             updateTransferMetrics(state.meta?.size || 0, state.meta?.size || 0);
             
             setTimeout(() => {
@@ -2884,7 +2797,7 @@
                 <div class="flex items-center gap-3 overflow-hidden">
                     ${previewEl}
                     <div class="truncate cursor-pointer" onclick="window.openQuickLook('${url}', '${safeName}', '${type}', '${formattedSize}')">
-                        <p class="font-medium text-sm text-white truncate mb-0.5 hover:text-blue-400 transition-colors">${filename}</p>
+                        <p class="font-medium text-sm text-white truncate mb-0.5 hover:text-blue-400 transition-colors">${escapeHtml(filename)}</p>
                         <p class="text-xs text-zinc-500">${senderBadge}${formattedSize}</p>
                     </div>
                 </div>
@@ -2892,7 +2805,7 @@
                     <button onclick="window.openQuickLook('${url}', '${safeName}', '${type}', '${formattedSize}')" class="p-2 text-zinc-400 hover:text-white glass-btn rounded-lg transition-colors" title="Quick Look Preview">
                         <i class="ph-bold ph-eye text-base"></i>
                     </button>
-                    <a href="${url}" download="${filename}" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-colors" title="Download">
+                    <a href="${url}" download="${escapeHtml(filename)}" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-colors" title="Download">
                         <i class="ph-bold ph-download-simple text-base"></i>
                     </a>
                 </div>
@@ -2903,13 +2816,14 @@
 
             // Trigger download via attached DOM element to avoid browser popup/policy blockage
             const a = document.createElement('a');
+            a.style.display = 'none';
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
                 try { document.body.removeChild(a); } catch(e){}
-            }, 300);
+            }, 1000);
             showToast(`Received ${filename}`, 'success');
         }
 
