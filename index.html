@@ -927,7 +927,6 @@
 
         // Multi-Channel Parallel SCTP State
         let sctpStreamsCount = parseInt(localStorage.getItem('webdrop_sctp_streams') || '4', 10);
-        const pendingSubChannels = new Map(); // peerId -> Array of subconnection objects
 
         // Screen Casting State
         let activeScreenStream = null;
@@ -1635,11 +1634,11 @@
             initRadarService(myPin); 
 
             peer = new Peer(myPin, {
-                debug: 2,
+                debug: 1,
                 config: {
-                    'iceServers': [
-                        { url: 'stun:stun.l.google.com:19302' },
-                        { url: 'stun:stun1.l.google.com:19302' }
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
                     ]
                 }
             });
@@ -1667,36 +1666,35 @@
 
             peer.on('disconnected', () => {
                 if (peer && !peer.destroyed) {
-                    updateAppStatus('connecting', 'Reconnecting...');
+                    if (meshPeers.size === 0) {
+                        updateAppStatus('connecting', 'Reconnecting...');
+                    }
                     peer.reconnect();
                 }
             });
 
-            // Incoming connection handling (supports multiple mesh peers & parallel SCTP channels)
+            // Incoming connection handling
             peer.on('connection', (connection) => {
+                // Ignore any deprecated subchannel offers
                 if (connection.metadata?.type === 'parallel_sctp_stream') {
-                    const peerId = connection.peer;
-                    const p = meshPeers.get(peerId);
-                    if (p) {
-                        if (!p.parallelChannels) p.parallelChannels = [ p.conn ];
-                        if (!p.parallelChannels.includes(connection)) {
-                            p.parallelChannels.push(connection);
-                        }
-                        connection.on('data', (data) => handleIncomingData(data, peerId));
-                        connection.on('close', () => {
-                            if (p.parallelChannels) {
-                                p.parallelChannels = p.parallelChannels.filter(c => c !== connection);
-                            }
-                        });
-                        connection.on('error', (err) => console.warn('Subchannel error for peer:', peerId, err));
-                    } else {
-                        if (!pendingSubChannels.has(peerId)) {
-                            pendingSubChannels.set(peerId, []);
-                        }
-                        pendingSubChannels.get(peerId).push(connection);
-                    }
                     return;
                 }
+
+                // Buffer any early data messages arriving before user confirms modal
+                const earlyDataQueue = [];
+                const bufferListener = (data) => earlyDataQueue.push(data);
+                connection.on('data', bufferListener);
+                connection._earlyDataQueue = earlyDataQueue;
+                connection._bufferListener = bufferListener;
+
+                connection.on('error', (err) => console.warn('Incoming conn error:', err));
+                connection.on('close', () => {
+                    if (pendingConn === connection) {
+                        pendingConn = null;
+                        const overlay = document.getElementById('security-modal-overlay');
+                        if (overlay) overlay.classList.add('hidden');
+                    }
+                });
 
                 const deviceName = connection.metadata?.deviceName || 'Unknown Device';
                 pendingConn = connection;
@@ -1722,17 +1720,25 @@
             peer.on('error', (err) => {
                 console.warn('PeerJS Error:', err);
                 if (err.type === 'peer-unavailable') {
-                    updateAppStatus('error', 'Device not found');
-                    setTimeout(() => { if (meshPeers.size === 0) updateAppStatus('online', 'Ready'); }, 3000);
+                    showToast('Device not found. Please verify the 5-digit PIN.', 'warn');
+                    if (meshPeers.size === 0) {
+                        updateAppStatus('error', 'Device not found');
+                        setTimeout(() => { if (meshPeers.size === 0) updateAppStatus('online', 'Ready'); }, 3000);
+                    }
                 } else if (err.type === 'network' || err.type === 'server-error') {
-                    updateAppStatus('error', 'Network Error');
+                    if (meshPeers.size === 0) {
+                        updateAppStatus('error', 'Network Error');
+                    }
                     setTimeout(() => {
                         if (peer && !peer.destroyed && peer.disconnected) {
                             peer.reconnect();
                         }
                     }, 3000);
                 } else {
-                    updateAppStatus('error', 'Connection Error');
+                    if (meshPeers.size === 0) {
+                        updateAppStatus('error', 'Connection Error');
+                        setTimeout(() => { if (meshPeers.size === 0) updateAppStatus('online', 'Ready'); }, 3000);
+                    }
                 }
             });
             
@@ -1972,55 +1978,64 @@
             // Synchronize with active mesh peers
             meshPeers.forEach(peerRecord => {
                 if (peerRecord.conn && peerRecord.conn.open) {
-                    if (peerRecord.parallelChannels && peerRecord.parallelChannels.length > sctpStreamsCount) {
-                        const excess = peerRecord.parallelChannels.splice(sctpStreamsCount);
-                        excess.forEach(c => {
-                            try { if (c !== peerRecord.conn && c.close) c.close(); } catch(e){}
-                        });
-                    } else {
-                        spawnParallelSCTPChannels(peerRecord);
-                    }
+                    setupSCTPLanes(peerRecord);
                 }
             });
         };
 
-        function spawnParallelSCTPChannels(peerRecord) {
-            if (!peerRecord || !peerRecord.conn || !peerRecord.conn.open) return;
-            if (!peerRecord.parallelChannels) {
-                peerRecord.parallelChannels = [peerRecord.conn];
+        function setupSCTPLanes(peerRecord) {
+            if (!peerRecord || !peerRecord.conn) return;
+
+            // Close any existing subchannel lanes before reconfiguring
+            if (peerRecord.parallelChannels) {
+                peerRecord.parallelChannels.forEach(c => {
+                    if (c !== peerRecord.conn && c.close) {
+                        try { c.close(); } catch(e){}
+                    }
+                });
             }
+
+            peerRecord.parallelChannels = [ peerRecord.conn ];
             if (sctpStreamsCount <= 1) return;
 
-            const currentCount = peerRecord.parallelChannels.length;
-            if (currentCount >= sctpStreamsCount) return;
+            const pc = peerRecord.conn.peerConnection;
+            if (!pc || typeof pc.createDataChannel !== 'function') return;
 
-            for (let i = currentCount; i < sctpStreamsCount; i++) {
+            for (let i = 1; i < sctpStreamsCount; i++) {
+                const laneId = 10 + i;
                 try {
-                    const subConn = peer.connect(peerRecord.id, {
-                        reliable: true,
-                        metadata: {
-                            type: 'parallel_sctp_stream',
-                            channelIdx: i,
-                            deviceName: getSavedDeviceName()
-                        }
+                    const dc = pc.createDataChannel(`sctp_lane_${i}`, {
+                        negotiated: true,
+                        id: laneId,
+                        ordered: true
                     });
-                    subConn.isSubChannel = true;
-                    if (!peerRecord.parallelChannels.includes(subConn)) {
-                        peerRecord.parallelChannels.push(subConn);
-                    }
+                    dc.binaryType = 'arraybuffer';
+                    dc.onmessage = (event) => handleIncomingData(event.data, peerRecord.id);
+                    dc.onerror = (err) => console.warn(`SCTP Lane ${i} error:`, err);
 
-                    subConn.on('open', () => {
-                        console.log(`Parallel SCTP subchannel ${i + 1}/${sctpStreamsCount} opened with peer ${peerRecord.id}`);
-                    });
-                    subConn.on('data', (data) => handleIncomingData(data, peerRecord.id));
-                    subConn.on('close', () => {
-                        if (peerRecord.parallelChannels) {
-                            peerRecord.parallelChannels = peerRecord.parallelChannels.filter(c => c !== subConn);
+                    const laneWrapper = {
+                        dataChannel: dc,
+                        isSubChannel: true,
+                        get open() {
+                            return dc.readyState === 'open';
+                        },
+                        get bufferedAmount() {
+                            return dc.bufferedAmount || 0;
+                        },
+                        send(data) {
+                            if (dc.readyState === 'open') {
+                                dc.send(data);
+                            } else if (peerRecord.conn && peerRecord.conn.open) {
+                                peerRecord.conn.send(data);
+                            }
+                        },
+                        close() {
+                            try { dc.close(); } catch(e) {}
                         }
-                    });
-                    subConn.on('error', (err) => console.warn(`Subchannel ${i} error:`, err));
-                } catch(err) {
-                    console.warn('Error spawning parallel subchannel:', err);
+                    };
+                    peerRecord.parallelChannels.push(laneWrapper);
+                } catch (err) {
+                    console.warn(`Could not create negotiated SCTP lane ${i}:`, err);
                 }
             }
         }
@@ -2056,44 +2071,101 @@
 
         window.acceptConnection = () => {
             const overlay = document.getElementById('security-modal-overlay');
-            overlay.classList.add('opacity-0');
-            document.getElementById('security-modal-card').classList.add('scale-95');
+            if (overlay) overlay.classList.add('opacity-0');
+            const card = document.getElementById('security-modal-card');
+            if (card) card.classList.add('scale-95');
             setTimeout(() => { 
-                overlay.classList.add('hidden'); 
-                if(pendingConn) setupActiveConnection(pendingConn);
+                if (overlay) overlay.classList.add('hidden'); 
+                if (pendingConn) {
+                    const connToSetup = pendingConn;
+                    pendingConn = null;
+                    setupActiveConnection(connToSetup);
+                }
             }, 300);
         };
 
         window.declineConnection = () => {
             const overlay = document.getElementById('security-modal-overlay');
-            overlay.classList.add('opacity-0');
+            if (overlay) overlay.classList.add('opacity-0');
+            const card = document.getElementById('security-modal-card');
+            if (card) card.classList.add('scale-95');
             setTimeout(() => { 
-                overlay.classList.add('hidden'); 
-                if(pendingConn) {
-                    pendingConn.close();
+                if (overlay) overlay.classList.add('hidden'); 
+                if (pendingConn) {
+                    try { pendingConn.close(); } catch(e){}
                     pendingConn = null;
                 }
             }, 300);
         };
 
+        let connectionTimer = null;
         window.initiateConnection = () => {
-            const targetPin = document.getElementById('target-id-input').value.trim();
-            if (targetPin.length !== 5 || targetPin === myPin) return;
+            const targetInput = document.getElementById('target-id-input');
+            const targetPin = targetInput ? targetInput.value.trim() : '';
+            if (targetPin.length !== 5 || targetPin === myPin) {
+                showToast('Please enter a valid 5-digit PIN', 'warn');
+                return;
+            }
+
+            if (meshPeers.has(targetPin)) {
+                showToast(`Already connected to ${targetPin}`, 'info');
+                return;
+            }
             
-            updateAppStatus('connecting', 'Connecting...');
+            updateAppStatus('connecting', `Connecting to ${targetPin}...`);
             const connection = peer.connect(targetPin, { 
                 reliable: true,
                 metadata: { deviceName: getSavedDeviceName() }
             });
             connection.isInitiator = true;
+
+            if (connectionTimer) clearTimeout(connectionTimer);
+            connectionTimer = setTimeout(() => {
+                if (!connection.open && !meshPeers.has(targetPin)) {
+                    try { connection.close(); } catch(e) {}
+                    showToast('Connection timed out. Check PIN and network.', 'error');
+                    if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
+                    else updateAppStatus('connected', `Mesh: ${meshPeers.size} connected`);
+                }
+            }, 15000);
             
-            connection.on('open', () => setupActiveConnection(connection));
-            connection.on('error', () => {
+            const handleOpen = () => {
+                if (connectionTimer) clearTimeout(connectionTimer);
+                setupActiveConnection(connection);
+            };
+
+            if (connection.open) {
+                handleOpen();
+            } else {
+                connection.on('open', handleOpen);
+            }
+
+            connection.on('error', (err) => {
+                if (connectionTimer) clearTimeout(connectionTimer);
+                console.warn('Connection error with peer:', targetPin, err);
+                showToast(`Connection failed to ${targetPin}`, 'error');
                 if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
+            });
+
+            connection.on('close', () => {
+                if (connectionTimer) clearTimeout(connectionTimer);
+                if (meshPeers.has(targetPin)) {
+                    window.disconnectPeer(targetPin);
+                } else if (meshPeers.size === 0) {
+                    updateAppStatus('online', 'Ready');
+                }
             });
         };
 
         function setupActiveConnection(connection) {
+            if (!connection) return;
+            if (!connection.open) {
+                connection.on('open', () => setupActiveConnection(connection));
+                return;
+            }
+
+            if (connectionTimer) clearTimeout(connectionTimer);
+
             const peerId = connection.peer;
             const deviceName = connection.metadata?.deviceName || peerId;
             const styleInfo = getIconForDevice(deviceName);
@@ -2107,37 +2179,31 @@
                 parallelChannels: [ connection ]
             };
 
-            // Attach any subchannels that arrived before setupActiveConnection completed
-            if (pendingSubChannels.has(peerId)) {
-                const queued = pendingSubChannels.get(peerId);
-                queued.forEach(subConn => {
-                    if (!peerRecord.parallelChannels.includes(subConn)) {
-                        peerRecord.parallelChannels.push(subConn);
-                    }
-                    subConn.on('data', (data) => handleIncomingData(data, peerId));
-                    subConn.on('close', () => {
-                        if (peerRecord.parallelChannels) {
-                            peerRecord.parallelChannels = peerRecord.parallelChannels.filter(c => c !== subConn);
-                        }
-                    });
-                    subConn.on('error', (err) => console.warn('Queued subchannel error:', err));
-                });
-                pendingSubChannels.delete(peerId);
-            }
-
             meshPeers.set(peerId, peerRecord);
             pendingConn = null;
 
-            setupPeerE2EE(peerRecord);
-
+            // Remove early buffer listener and bind active incoming data handler
+            if (connection._bufferListener) {
+                try {
+                    if (connection.off) connection.off('data', connection._bufferListener);
+                } catch(e) {}
+            }
             connection.on('data', (data) => handleIncomingData(data, peerId));
             connection.on('close', () => window.disconnectPeer(peerId));
             connection.on('error', (err) => console.warn('Conn error for peer:', peerId, err));
 
-            // Initiator spawns parallel SCTP subchannels to reach the configured stream count
-            if (connection.isInitiator) {
-                spawnParallelSCTPChannels(peerRecord);
+            // Replay any early data messages received during handshake / modal
+            if (connection._earlyDataQueue && connection._earlyDataQueue.length > 0) {
+                const queued = [...connection._earlyDataQueue];
+                connection._earlyDataQueue.length = 0;
+                queued.forEach(data => handleIncomingData(data, peerId));
             }
+
+            // Initiate end-to-end encryption key exchange
+            setupPeerE2EE(peerRecord);
+
+            // Setup high-speed native SCTP lanes (zero-renegotiation, out-of-band)
+            setupSCTPLanes(peerRecord);
 
             updateActiveViewUI();
             checkPendingSharedItemsForMesh();
@@ -2148,6 +2214,7 @@
             const dot = document.getElementById('status-dot');
             const txt = document.getElementById('status-text');
             const connectBtn = document.getElementById('connect-btn');
+            const targetInput = document.getElementById('target-id-input');
             
             if (txt) txt.innerText = text;
             
@@ -2157,7 +2224,10 @@
             if(status === 'error') bgColor = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]';
             
             if (dot) dot.className = `w-2 h-2 rounded-full ${bgColor}`;
-            if (connectBtn) connectBtn.disabled = status !== 'online';
+            if (connectBtn) {
+                const pinVal = targetInput ? targetInput.value.trim() : '';
+                connectBtn.disabled = status !== 'online' || pinVal.length !== 5;
+            }
         }
 
         window.handleFileSelect = (e) => {
@@ -2300,10 +2370,10 @@
             metrics.lastSampleBytes = startOffset;
             updateTransferMetrics(transferState.offset, file.size);
 
-            // Ensure any target peer has spawned parallel subchannels if initiator
+            // Ensure any target peer has established SCTP lanes
             targets.forEach(t => {
-                if (t.parallelChannels && t.parallelChannels.length < sctpStreamsCount && t.conn?.isInitiator) {
-                    spawnParallelSCTPChannels(t);
+                if (!t.parallelChannels || t.parallelChannels.length < sctpStreamsCount) {
+                    setupSCTPLanes(t);
                 }
             });
 
