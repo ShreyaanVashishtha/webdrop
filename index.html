@@ -16,6 +16,7 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
@@ -454,9 +455,15 @@
                             Connect
                         </button>
                     </div>
-                    <button onclick="window.toggleCameraScanner('host')" class="w-full glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
-                        <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-host">Scan Answer with Camera</span>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="window.toggleCameraScanner('host')" class="flex-1 glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
+                            <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-host">Scan Answer with Camera</span>
+                        </button>
+                        <button onclick="document.getElementById('scanner-file-input-host').click()" class="glass-btn text-zinc-300 hover:text-white px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5" title="Scan QR from image or photo">
+                            <i class="ph-bold ph-image"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="scanner-file-input-host" accept="image/*" class="hidden" onchange="window.scanQrFromImageFile(event, 'host')">
                 </div>
             </div>
 
@@ -473,9 +480,15 @@
                     </button>
                 </div>
 
-                <button onclick="window.toggleCameraScanner('join')" class="w-full glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
-                    <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-join">Scan Device 1 with Camera</span>
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="window.toggleCameraScanner('join')" class="flex-1 glass-btn text-zinc-300 hover:text-white py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5">
+                        <i class="ph-bold ph-camera"></i> <span id="camera-btn-text-join">Scan Device 1 with Camera</span>
+                    </button>
+                    <button onclick="document.getElementById('scanner-file-input-join').click()" class="glass-btn text-zinc-300 hover:text-white px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5" title="Scan QR from image or photo">
+                        <i class="ph-bold ph-image"></i>
+                    </button>
+                </div>
+                <input type="file" id="scanner-file-input-join" accept="image/*" class="hidden" onchange="window.scanQrFromImageFile(event, 'join')">
 
                 <!-- Generated Answer Section (revealed after offer applied) -->
                 <div id="offline-join-answer-card" class="hidden space-y-4 pt-3 border-t border-white/10">
@@ -497,15 +510,34 @@
                 </div>
             </div>
 
-            <!-- Shared Camera Scanner Container -->
-            <div id="scanner-container" class="mt-4 hidden p-2 bg-black rounded-xl border border-white/10 relative">
-                <video id="scanner-video" playsinline autoplay class="w-full h-44 object-cover rounded-lg bg-black"></video>
-                <div class="absolute inset-0 border-2 border-purple-500/40 rounded-xl pointer-events-none flex items-center justify-center">
-                    <div class="w-32 h-32 border-2 border-purple-400 rounded-lg animate-pulse"></div>
+            <!-- Shared Camera Scanner Container with Enhanced Viewfinder -->
+            <div id="scanner-container" class="mt-4 hidden p-3 bg-black/90 rounded-2xl border border-white/10 relative overflow-hidden">
+                <div class="relative w-full h-52 bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center">
+                    <video id="scanner-video" playsinline autoplay muted class="w-full h-full object-cover bg-black"></video>
+                    
+                    <!-- Scanner Viewfinder Box with Laser Animation -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div id="scanner-focus-box" class="w-40 h-40 border-2 border-purple-400 rounded-xl relative flex items-center justify-center transition-colors duration-200 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                            <!-- Corner accents -->
+                            <span class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white"></span>
+                            <span class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white"></span>
+                            <span class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white"></span>
+                            <span class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white"></span>
+                            <!-- Animated scanning beam line -->
+                            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-pulse"></div>
+                        </div>
+                        <p id="scanner-status-text" class="text-[10px] text-zinc-300 font-mono mt-2 bg-black/60 px-2 py-0.5 rounded-md">Align QR code inside box</p>
+                    </div>
                 </div>
-                <button onclick="window.stopCameraScanner()" class="mt-2 text-xs text-zinc-400 hover:text-white">
-                    Cancel Camera Scan
-                </button>
+
+                <div class="flex items-center justify-between mt-3 gap-2">
+                    <button onclick="window.flipCamera()" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5">
+                        <i class="ph-bold ph-camera-rotate"></i> Flip Camera
+                    </button>
+                    <button onclick="window.stopCameraScanner()" class="glass-btn text-red-400 hover:text-red-300 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1">
+                        <i class="ph-bold ph-x"></i> Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2789,6 +2821,69 @@
         // =========================================
         // ZERO-INTERNET / AIRPLANE MODE (OFFLINE P2P)
         // =========================================
+        let scanCanvas = null;
+        let scanCtx = null;
+        let cameraActiveRole = null;
+        let currentFacingMode = 'environment';
+        let scanAnimFrame = null;
+        let isScanningActive = false;
+
+        async function compressSDP(sdp) {
+            if (typeof CompressionStream !== 'undefined') {
+                try {
+                    const stream = new Blob([sdp]).stream().pipeThrough(new CompressionStream('deflate'));
+                    const buf = await new Response(stream).arrayBuffer();
+                    const bytes = new Uint8Array(buf);
+                    let binary = '';
+                    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                    return 'Z:' + btoa(binary);
+                } catch(e){}
+            }
+            return 'R:' + btoa(sdp);
+        }
+
+        async function decompressSDP(token) {
+            if (!token) return '';
+            token = token.trim();
+            if (token.startsWith('Z:')) {
+                const b64 = token.slice(2);
+                const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+                const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+                return await new Response(stream).text();
+            }
+            if (token.startsWith('R:')) {
+                return atob(token.slice(2));
+            }
+            try {
+                const obj = JSON.parse(atob(token));
+                if (obj && obj.s) return obj.s;
+            } catch(e){}
+            try {
+                return atob(token);
+            } catch(e) {
+                return token;
+            }
+        }
+
+        function playScanChime() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const audioCtx = new AudioCtx();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch(e){}
+        }
+
         window.openOfflineModal = () => {
             const overlay = document.getElementById('offline-modal-overlay');
             const card = document.getElementById('offline-modal-card');
@@ -2856,7 +2951,7 @@
                 setTimeout(resolve, 1500);
             });
 
-            const token = btoa(JSON.stringify({ t: 'o', s: offlinePeerConnection.localDescription.sdp }));
+            const token = await compressSDP(offlinePeerConnection.localDescription.sdp);
             const tokenEl = document.getElementById('offline-host-token');
             if (tokenEl) tokenEl.value = token;
 
@@ -2866,8 +2961,8 @@
                 try {
                     offlineHostQrInstance = new QRCode(qrContainer, {
                         text: token,
-                        width: 200,
-                        height: 200,
+                        width: 220,
+                        height: 220,
                         colorDark: "#09090b",
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.L
@@ -2882,14 +2977,16 @@
             const input = document.getElementById('offline-offer-input');
             const raw = (tokenStr || input?.value || '').trim();
             if (!raw) {
-                showToast('Please paste or scan Device 1 offer token', 'warn');
+                showToast('Please scan or paste Device 1 offer token', 'warn');
                 return;
             }
 
-            let offerObj;
+            let remoteSdp;
             try {
-                offerObj = JSON.parse(atob(raw));
-                if (offerObj.t !== 'o' || !offerObj.s) throw new Error('Invalid format');
+                remoteSdp = await decompressSDP(raw);
+                if (!remoteSdp || !remoteSdp.includes('m=application')) {
+                    throw new Error('Invalid SDP payload');
+                }
             } catch(e) {
                 showToast('Invalid Offer Handshake Token', 'error');
                 return;
@@ -2905,7 +3002,7 @@
                 bindOfflineDataChannel(offlineDataChannel, 'Device 1 (Host)');
             };
 
-            await offlinePeerConnection.setRemoteDescription({ type: 'offer', sdp: offerObj.s });
+            await offlinePeerConnection.setRemoteDescription({ type: 'offer', sdp: remoteSdp });
             const answer = await offlinePeerConnection.createAnswer();
             await offlinePeerConnection.setLocalDescription(answer);
 
@@ -2921,7 +3018,7 @@
                 setTimeout(resolve, 1500);
             });
 
-            const answerToken = btoa(JSON.stringify({ t: 'a', s: offlinePeerConnection.localDescription.sdp }));
+            const answerToken = await compressSDP(offlinePeerConnection.localDescription.sdp);
             const answerCard = document.getElementById('offline-join-answer-card');
             const answerTokenEl = document.getElementById('offline-join-token');
             const answerQrContainer = document.getElementById('offline-join-qrcode');
@@ -2932,8 +3029,8 @@
                 try {
                     offlineJoinQrInstance = new QRCode(answerQrContainer, {
                         text: answerToken,
-                        width: 200,
-                        height: 200,
+                        width: 220,
+                        height: 220,
                         colorDark: "#09090b",
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.L
@@ -2942,21 +3039,23 @@
             }
 
             if (answerCard) answerCard.classList.remove('hidden');
-            showToast('Answer token ready! Device 1 can now scan/paste it.', 'success');
+            showToast('Answer QR ready! Have Device 1 scan it.', 'success');
         };
 
         window.applyOfflineAnswer = async (tokenStr) => {
             const input = document.getElementById('offline-answer-input');
             const raw = (tokenStr || input?.value || '').trim();
             if (!raw) {
-                showToast('Please paste or scan Device 2 answer token', 'warn');
+                showToast('Please scan or paste Device 2 answer token', 'warn');
                 return;
             }
 
-            let answerObj;
+            let remoteSdp;
             try {
-                answerObj = JSON.parse(atob(raw));
-                if (answerObj.t !== 'a' || !answerObj.s) throw new Error('Invalid format');
+                remoteSdp = await decompressSDP(raw);
+                if (!remoteSdp || !remoteSdp.includes('m=application')) {
+                    throw new Error('Invalid SDP payload');
+                }
             } catch(e) {
                 showToast('Invalid Answer Handshake Token', 'error');
                 return;
@@ -2968,7 +3067,7 @@
             }
 
             try {
-                await offlinePeerConnection.setRemoteDescription({ type: 'answer', sdp: answerObj.s });
+                await offlinePeerConnection.setRemoteDescription({ type: 'answer', sdp: remoteSdp });
                 showToast('Connecting via local WebRTC...', 'info');
             } catch(err) {
                 showToast(`Handshake failed: ${err.message}`, 'error');
@@ -3037,52 +3136,151 @@
         };
 
         window.toggleCameraScanner = async (role) => {
-            const container = document.getElementById('scanner-container');
-            const video = document.getElementById('scanner-video');
-
-            if (cameraStream) {
+            if (isScanningActive && cameraActiveRole === role) {
                 window.stopCameraScanner();
                 return;
             }
 
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { ideal: 'environment' } }
-                });
-                video.srcObject = cameraStream;
-                container.classList.remove('hidden');
+            window.stopCameraScanner();
+            cameraActiveRole = role;
 
-                if ('BarcodeDetector' in window) {
-                    const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-                    cameraScanInterval = setInterval(async () => {
-                        if (!cameraStream || video.readyState < 2) return;
-                        try {
-                            const barcodes = await detector.detect(video);
-                            if (barcodes.length > 0) {
-                                const code = barcodes[0].rawValue;
-                                window.stopCameraScanner();
-                                if (role === 'host') {
-                                    document.getElementById('offline-answer-input').value = code;
-                                    window.applyOfflineAnswer(code);
-                                } else {
-                                    document.getElementById('offline-offer-input').value = code;
-                                    window.applyOfflineOffer(code);
-                                }
-                            }
-                        } catch(e){}
-                    }, 200);
-                } else {
-                    showToast('Camera active. If QR is not auto-read, paste the token above.', 'info');
+            const container = document.getElementById('scanner-container');
+            const video = document.getElementById('scanner-video');
+            const statusEl = document.getElementById('scanner-status-text');
+            if (statusEl) statusEl.innerText = 'Starting camera...';
+
+            container.classList.remove('hidden');
+
+            try {
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: { ideal: currentFacingMode },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    });
+                } catch(err1) {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 }
+
+                cameraStream = stream;
+                video.srcObject = stream;
+                video.muted = true;
+                video.setAttribute('playsinline', '');
+                await video.play().catch(()=>{});
+
+                isScanningActive = true;
+                if (statusEl) statusEl.innerText = 'Align QR code inside box';
+
+                if (!scanCanvas) {
+                    scanCanvas = document.createElement('canvas');
+                    scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+                }
+
+                startScanLoop();
+
             } catch(err) {
-                showToast('Camera access denied or unavailable', 'warn');
+                console.error('Camera access error:', err);
+                container.classList.add('hidden');
+                isScanningActive = false;
+                showToast(`Camera unavailable: ${err.message}. You can paste or upload an image.`, 'warn');
+            }
+        };
+
+        function startScanLoop() {
+            const video = document.getElementById('scanner-video');
+            const focusBox = document.getElementById('scanner-focus-box');
+            let lastScanTime = 0;
+
+            const scanTick = (timestamp) => {
+                if (!isScanningActive || !cameraStream) return;
+
+                if (timestamp - lastScanTime >= 80) {
+                    lastScanTime = timestamp;
+
+                    if (video.readyState >= (video.HAVE_CURRENT_DATA || 2) && video.videoWidth > 0) {
+                        const w = video.videoWidth;
+                        const h = video.videoHeight;
+                        scanCanvas.width = w;
+                        scanCanvas.height = h;
+                        scanCtx.drawImage(video, 0, 0, w, h);
+
+                        let decodedCode = null;
+
+                        // Method 1: jsQR (ultra-fast, cross-platform)
+                        if (typeof jsQR === 'function') {
+                            try {
+                                const imgData = scanCtx.getImageData(0, 0, w, h);
+                                const result = jsQR(imgData.data, imgData.width, imgData.height, {
+                                    inversionAttempts: 'attemptBoth'
+                                });
+                                if (result && result.data && result.data.trim()) {
+                                    decodedCode = result.data.trim();
+                                }
+                            } catch(e){}
+                        }
+
+                        // Method 2: BarcodeDetector fallback if available
+                        if (!decodedCode && 'BarcodeDetector' in window) {
+                            try {
+                                const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+                                detector.detect(scanCanvas).then(barcodes => {
+                                    if (barcodes.length > 0 && barcodes[0].rawValue) {
+                                        handleScannedCode(barcodes[0].rawValue.trim(), cameraActiveRole);
+                                    }
+                                }).catch(()=>{});
+                            } catch(e){}
+                        }
+
+                        if (decodedCode) {
+                            if (focusBox) {
+                                focusBox.classList.remove('border-purple-400');
+                                focusBox.classList.add('border-emerald-400', 'bg-emerald-500/20');
+                            }
+                            handleScannedCode(decodedCode, cameraActiveRole);
+                            return;
+                        }
+                    }
+                }
+
+                scanAnimFrame = requestAnimationFrame(scanTick);
+            };
+
+            scanAnimFrame = requestAnimationFrame(scanTick);
+        }
+
+        function handleScannedCode(code, role) {
+            playScanChime();
+            window.stopCameraScanner();
+
+            if (role === 'host') {
+                const input = document.getElementById('offline-answer-input');
+                if (input) input.value = code;
+                window.applyOfflineAnswer(code);
+            } else {
+                const input = document.getElementById('offline-offer-input');
+                if (input) input.value = code;
+                window.applyOfflineOffer(code);
+            }
+        }
+
+        window.flipCamera = async () => {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            if (isScanningActive && cameraActiveRole) {
+                const role = cameraActiveRole;
+                window.stopCameraScanner();
+                await window.toggleCameraScanner(role);
             }
         };
 
         window.stopCameraScanner = () => {
-            if (cameraScanInterval) {
-                clearInterval(cameraScanInterval);
-                cameraScanInterval = null;
+            isScanningActive = false;
+            if (scanAnimFrame) {
+                cancelAnimationFrame(scanAnimFrame);
+                scanAnimFrame = null;
             }
             if (cameraStream) {
                 cameraStream.getTracks().forEach(t => t.stop());
@@ -3092,6 +3290,47 @@
             if (container) container.classList.add('hidden');
             const video = document.getElementById('scanner-video');
             if (video) video.srcObject = null;
+            const focusBox = document.getElementById('scanner-focus-box');
+            if (focusBox) {
+                focusBox.classList.remove('border-emerald-400', 'bg-emerald-500/20');
+                focusBox.classList.add('border-purple-400');
+            }
+        };
+
+        window.scanQrFromImageFile = (e, role) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    ctx.drawImage(img, 0, 0);
+
+                    let foundCode = null;
+                    if (typeof jsQR === 'function') {
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const result = jsQR(imgData.data, imgData.width, imgData.height, {
+                            inversionAttempts: 'attemptBoth'
+                        });
+                        if (result && result.data) foundCode = result.data.trim();
+                    }
+
+                    if (foundCode) {
+                        handleScannedCode(foundCode, role);
+                        showToast('QR Code read successfully from image!', 'success');
+                    } else {
+                        showToast('No QR code detected in the uploaded image', 'error');
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
         };
 
         window.copyInviteLink = async () => {
