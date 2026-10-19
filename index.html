@@ -1102,12 +1102,16 @@
 
         async function setupPeerE2EE(peerRecord) {
             try {
+                if (peerRecord.e2eeSent) return;
+                peerRecord.e2eeSent = true;
                 const keyPair = await getOrCreateEcdhKeyPair();
                 const exportedPub = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
-                peerRecord.conn.send(JSON.stringify({
-                    type: 'e2ee_handshake',
-                    pubKey: Array.from(new Uint8Array(exportedPub))
-                }));
+                if (peerRecord.conn && peerRecord.conn.open) {
+                    peerRecord.conn.send(JSON.stringify({
+                        type: 'e2ee_handshake',
+                        pubKey: Array.from(new Uint8Array(exportedPub))
+                    }));
+                }
             } catch (err) {
                 console.error('Failed to initiate E2EE handshake:', err);
             }
@@ -1163,6 +1167,18 @@
                 };
 
                 updateE2eeUI();
+
+                // If this peer has not yet transmitted its public key, reply now
+                if (!peerRecord.e2eeSent) {
+                    peerRecord.e2eeSent = true;
+                    const exportedPub = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
+                    if (peerRecord.conn && peerRecord.conn.open) {
+                        peerRecord.conn.send(JSON.stringify({
+                            type: 'e2ee_handshake',
+                            pubKey: Array.from(new Uint8Array(exportedPub))
+                        }));
+                    }
+                }
             } catch (err) {
                 console.error('Failed to complete E2EE handshake:', err);
             }
@@ -1638,7 +1654,10 @@
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
                     ]
                 }
             });
@@ -1675,11 +1694,6 @@
 
             // Incoming connection handling
             peer.on('connection', (connection) => {
-                // Ignore any deprecated subchannel offers
-                if (connection.metadata?.type === 'parallel_sctp_stream') {
-                    return;
-                }
-
                 // Buffer any early data messages arriving before user confirms modal
                 const earlyDataQueue = [];
                 const bufferListener = (data) => earlyDataQueue.push(data);
@@ -1725,6 +1739,12 @@
                         updateAppStatus('error', 'Device not found');
                         setTimeout(() => { if (meshPeers.size === 0) updateAppStatus('online', 'Ready'); }, 3000);
                     }
+                } else if (err.type === 'unavailable-id') {
+                    console.warn('PIN collision on PeerJS server, picking new PIN...');
+                    myPin = Math.floor(10000 + Math.random() * 90000).toString();
+                    document.getElementById('my-id-display').innerText = myPin;
+                    try { peer.destroy(); } catch(e){}
+                    setTimeout(initApp, 500);
                 } else if (err.type === 'network' || err.type === 'server-error') {
                     if (meshPeers.size === 0) {
                         updateAppStatus('error', 'Network Error');
@@ -1968,76 +1988,24 @@
             }, 300);
         };
 
+        function getDynamicHighWaterMark() {
+            if (sctpStreamsCount >= 8) return 2048 * 1024;
+            if (sctpStreamsCount >= 4) return 1024 * 1024;
+            if (sctpStreamsCount >= 2) return 512 * 1024;
+            return 256 * 1024;
+        }
+
         window.selectSctpStreams = (count) => {
             const parsed = parseInt(count, 10) || 4;
             sctpStreamsCount = parsed;
             localStorage.setItem('webdrop_sctp_streams', parsed.toString());
             updateParallelSctpUI();
-            showToast(`Configured ${parsed}x Parallel SCTP stream(s)`, 'success');
-
-            // Synchronize with active mesh peers
-            meshPeers.forEach(peerRecord => {
-                if (peerRecord.conn && peerRecord.conn.open) {
-                    setupSCTPLanes(peerRecord);
-                }
-            });
+            showToast(`Configured ${parsed}x Turbo SCTP stream pipeline`, 'success');
         };
 
         function setupSCTPLanes(peerRecord) {
-            if (!peerRecord || !peerRecord.conn) return;
-
-            // Close any existing subchannel lanes before reconfiguring
-            if (peerRecord.parallelChannels) {
-                peerRecord.parallelChannels.forEach(c => {
-                    if (c !== peerRecord.conn && c.close) {
-                        try { c.close(); } catch(e){}
-                    }
-                });
-            }
-
+            if (!peerRecord) return;
             peerRecord.parallelChannels = [ peerRecord.conn ];
-            if (sctpStreamsCount <= 1) return;
-
-            const pc = peerRecord.conn.peerConnection;
-            if (!pc || typeof pc.createDataChannel !== 'function') return;
-
-            for (let i = 1; i < sctpStreamsCount; i++) {
-                const laneId = 10 + i;
-                try {
-                    const dc = pc.createDataChannel(`sctp_lane_${i}`, {
-                        negotiated: true,
-                        id: laneId,
-                        ordered: true
-                    });
-                    dc.binaryType = 'arraybuffer';
-                    dc.onmessage = (event) => handleIncomingData(event.data, peerRecord.id);
-                    dc.onerror = (err) => console.warn(`SCTP Lane ${i} error:`, err);
-
-                    const laneWrapper = {
-                        dataChannel: dc,
-                        isSubChannel: true,
-                        get open() {
-                            return dc.readyState === 'open';
-                        },
-                        get bufferedAmount() {
-                            return dc.bufferedAmount || 0;
-                        },
-                        send(data) {
-                            if (dc.readyState === 'open') {
-                                dc.send(data);
-                            } else if (peerRecord.conn && peerRecord.conn.open) {
-                                peerRecord.conn.send(data);
-                            }
-                        },
-                        close() {
-                            try { dc.close(); } catch(e) {}
-                        }
-                    };
-                    peerRecord.parallelChannels.push(laneWrapper);
-                } catch (err) {
-                    console.warn(`Could not create negotiated SCTP lane ${i}:`, err);
-                }
-            }
         }
 
         function setupVisibilityHandler() {
@@ -2121,16 +2089,18 @@
 
             if (connectionTimer) clearTimeout(connectionTimer);
             connectionTimer = setTimeout(() => {
-                if (!connection.open && !meshPeers.has(targetPin)) {
-                    try { connection.close(); } catch(e) {}
-                    showToast('Connection timed out. Check PIN and network.', 'error');
+                if (!meshPeers.has(targetPin)) {
+                    showToast('Connection timed out. Check PIN and network.', 'warn');
                     if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
                     else updateAppStatus('connected', `Mesh: ${meshPeers.size} connected`);
                 }
-            }, 15000);
+            }, 30000);
             
             const handleOpen = () => {
-                if (connectionTimer) clearTimeout(connectionTimer);
+                if (connectionTimer) {
+                    clearTimeout(connectionTimer);
+                    connectionTimer = null;
+                }
                 setupActiveConnection(connection);
             };
 
@@ -2141,19 +2111,12 @@
             }
 
             connection.on('error', (err) => {
-                if (connectionTimer) clearTimeout(connectionTimer);
-                console.warn('Connection error with peer:', targetPin, err);
-                showToast(`Connection failed to ${targetPin}`, 'error');
-                if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
-            });
-
-            connection.on('close', () => {
-                if (connectionTimer) clearTimeout(connectionTimer);
-                if (meshPeers.has(targetPin)) {
-                    window.disconnectPeer(targetPin);
-                } else if (meshPeers.size === 0) {
-                    updateAppStatus('online', 'Ready');
+                console.warn('Peer connection error:', targetPin, err);
+                if (connectionTimer) {
+                    clearTimeout(connectionTimer);
+                    connectionTimer = null;
                 }
+                if (meshPeers.size === 0) updateAppStatus('online', 'Ready');
             });
         };
 
@@ -2164,7 +2127,10 @@
                 return;
             }
 
-            if (connectionTimer) clearTimeout(connectionTimer);
+            if (connectionTimer) {
+                clearTimeout(connectionTimer);
+                connectionTimer = null;
+            }
 
             const peerId = connection.peer;
             const deviceName = connection.metadata?.deviceName || peerId;
@@ -2201,9 +2167,6 @@
 
             // Initiate end-to-end encryption key exchange
             setupPeerE2EE(peerRecord);
-
-            // Setup high-speed native SCTP lanes (zero-renegotiation, out-of-band)
-            setupSCTPLanes(peerRecord);
 
             updateActiveViewUI();
             checkPendingSharedItemsForMesh();
@@ -2370,29 +2333,22 @@
             metrics.lastSampleBytes = startOffset;
             updateTransferMetrics(transferState.offset, file.size);
 
-            // Ensure any target peer has established SCTP lanes
-            targets.forEach(t => {
-                if (!t.parallelChannels || t.parallelChannels.length < sctpStreamsCount) {
-                    setupSCTPLanes(t);
-                }
-            });
+            const highWaterMark = getDynamicHighWaterMark();
 
             while (transferState.offset < file.size && isTransferring && targets.some(t => t.conn && t.conn.open)) {
-                // Backpressure flow control: if any target has ALL channels saturated, pause briefly
+                // Backpressure flow control: if any target has buffer saturated, pause briefly
                 let needsBackpressureWait = false;
                 for (const t of targets) {
-                    const channels = (t.parallelChannels && t.parallelChannels.length > 0)
-                        ? t.parallelChannels.filter(c => c && c.open)
-                        : (t.conn && t.conn.open ? [t.conn] : []);
-                    if (channels.length === 0) continue;
-                    const minBuf = Math.min(...channels.map(c => c.dataChannel?.bufferedAmount ?? c.bufferedAmount ?? 0));
-                    if (minBuf > HIGH_WATER_MARK) {
-                        needsBackpressureWait = true;
-                        break;
+                    if (t.conn && t.conn.open) {
+                        const buf = t.conn.dataChannel?.bufferedAmount ?? t.conn.bufferedAmount ?? 0;
+                        if (buf > highWaterMark) {
+                            needsBackpressureWait = true;
+                            break;
+                        }
                     }
                 }
                 if (needsBackpressureWait) {
-                    await new Promise(resolve => setTimeout(resolve, 20));
+                    await new Promise(resolve => setTimeout(resolve, 15));
                     if (!isTransferring) return;
                     continue;
                 }
@@ -2403,24 +2359,9 @@
 
                 const chunkIndex = Math.floor(transferState.offset / CHUNK_SIZE);
 
-                // Transmit chunk across parallel channels using work-stealing backpressure
                 for (const t of targets) {
-                    const channels = (t.parallelChannels && t.parallelChannels.length > 0)
-                        ? t.parallelChannels.filter(c => c && c.open)
-                        : (t.conn && t.conn.open ? [t.conn] : []);
-                    if (channels.length === 0) continue;
-
-                    // Select the least-buffered channel for optimal line-rate throughput
-                    let bestChannel = channels[0];
-                    let minBuf = bestChannel.dataChannel?.bufferedAmount ?? bestChannel.bufferedAmount ?? 0;
-                    for (let i = 1; i < channels.length; i++) {
-                        const ch = channels[i];
-                        const buf = ch.dataChannel?.bufferedAmount ?? ch.bufferedAmount ?? 0;
-                        if (buf < minBuf) {
-                            minBuf = buf;
-                            bestChannel = ch;
-                        }
-                    }
+                    if (!t.conn || !t.conn.open) continue;
+                    const bestChannel = t.conn;
 
                     if (t.e2ee?.ready && t.e2ee.key) {
                         try {
@@ -2468,13 +2409,10 @@
                     if (!isTransferring) return;
                     let maxBuffered = 0;
                     targets.forEach(t => {
-                        const channels = (t.parallelChannels && t.parallelChannels.length > 0)
-                            ? t.parallelChannels.filter(c => c && c.open)
-                            : (t.conn && t.conn.open ? [t.conn] : []);
-                        channels.forEach(c => {
-                            const buf = c.dataChannel?.bufferedAmount ?? c.bufferedAmount ?? 0;
+                        if (t.conn && t.conn.open) {
+                            const buf = t.conn.dataChannel?.bufferedAmount ?? t.conn.bufferedAmount ?? 0;
                             if (buf > maxBuffered) maxBuffered = buf;
-                        });
+                        }
                     });
                     if (maxBuffered > 0) {
                         setTimeout(waitForDrain, 25);
