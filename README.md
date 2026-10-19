@@ -11,6 +11,7 @@ WebDrop turns any modern desktop or mobile browser into a high-speed, direct pee
 - **🎯 Apple-Inspired Radar Discovery**: Circular live radar animation (`#radar-container`) that scans for nearby devices on the same network using ephemeral Firebase presence heartbeats.
 - **🌐 Multi-Peer Mesh / "Room Radar"**: Connect 3 or more devices simultaneously into a mesh room. Choose to broadcast files and text to all connected devices at once or click individual peer chips to send to a specific target. Invite additional devices anytime with the in-room "Add Device" QR & PIN modal.
 - **🔐 Zero-Knowledge End-to-End Encryption (E2EE)**: Hardware-accelerated **AES-256-GCM** encryption powered by ephemeral **ECDH (P-256)** key exchange via `window.crypto.subtle`. Verify your connection via a 4-emoji cryptographic fingerprint and 16-digit safety numbers.
+- **⚡ Multi-Channel Parallel SCTP (Quad Turbo & Extreme Hyper)**: Saturate Wi-Fi 6, 2.5G, and 10Gbps fiber LANs by striping transfers across parallel WebRTC DataChannels (1x Standard, 2x Accelerated, 4x Quad Turbo, 8x Extreme Hyper). Features an intelligent **Work-Stealing Backpressure Dispatcher** that dynamically steers each chunk to the least-buffered channel, paired with random-access OPFS `seek()` writes and sequence-header packet framing.
 - **🔄 Fault-Tolerant Transfer Resume**: Interrupted transfers automatically resume from their exact byte offset using persistent **OPFS checkpoints**. If Wi-Fi blips or a peer temporarily disconnects mid-transfer, re-initiating the transfer resumes seamlessly from the saved checkpoint instead of starting from 0%.
 - **✈️ Zero-Internet / Airplane Mode (Visual Handshake)**: Transfer files completely off-grid with zero internet connection or STUN servers. Devices exchange raw WebRTC Session Description Protocol (SDP) tokens directly via animated scannable QR codes or camera scanner.
 - **🖥️ Ultra-Low Latency Screen Casting**: Live 60 FPS sub-50ms screen sharing and presentation mode via WebRTC `MediaStream`. Connected devices can view broadcasts in real time with Picture-in-Picture (PiP) and Fullscreen controls.
@@ -39,18 +40,20 @@ WebDrop turns any modern desktop or mobile browser into a high-speed, direct pee
          │          - Derives 256-bit AES-GCM Symmetric Key       │
          │          - Computes SHA-256 Safety Emoji Fingerprint   │
          │                                                        │
-         ├══════ 4. Encrypted Direct SCTP DataChannel ════════════╡ (P2P Wire)
-         │          - 64 KB Slices + 12-byte IV + AES-GCM Tag     │
-         │          - 1 MB Backpressure Buffer Window             │
+         ├══════ 4. Multi-Channel Parallel SCTP DataChannels ════╡ (P2P Wire)
+         │          - 1x, 2x, 4x (Turbo), 8x (Extreme) Channels  │
+         │          - Work-Stealing Backpressure Dispatcher      │
+         │          - Sequenced Framing [0xEF/0xD0 | Index | IV] │
+         │          - Random-Access OPFS seek() Disk Streaming   │
          │          - Live Speed & Dynamic ETA Calculation        │
          │                                                        │
-         └────── 5. EOF & Automatic Download Assembly ────────────┘
+         └────── 5. EOF & Out-of-Order Assembly / Download ──────┘
 ```
 
 1. **Signaling & Presence**: Devices register an ephemeral presence record via Firebase Firestore tagged with a public IP hash and a 5-digit PIN. The live snapshot updates the circular radar in real time.
 2. **WebRTC Direct DataChannel & Mesh**: Peer connections are established directly using Google's public STUN servers. Data is transferred strictly peer-to-peer using DTLS/SCTP encryption—files never hit any intermediate server.
 3. **Application-Layer Zero-Knowledge E2EE**: Ephemeral Elliptic Curve Diffie-Hellman (ECDH) on curve P-256 is negotiated across the channel. File chunks and text snippets are encrypted in memory with AES-256-GCM before transmission.
-4. **Backpressure Flow Control**: Instead of waiting for round-trip acknowledgments per chunk, WebDrop keeps a 1 MB sliding window in flight and listens to `bufferedamountlow` across all active data channels to prevent buffer bloat while maintaining line rate.
+4. **Multi-Channel Parallel SCTP & Work-Stealing Backpressure**: Instead of a single serial stream, WebDrop opens parallel DataChannels (up to 8 lanes) and dynamically stripes chunks onto whichever channel has the lowest `bufferedAmount`. This saturates high-bandwidth local connections (Wi-Fi 6, 2.5G, 10Gbps LAN) while OPFS `seek()` handles out-of-order writes directly to disk.
 5. **PWA Web Share Target**: The Service Worker intercepts `POST` requests from the system Share Sheet, deposits shared files/text into IndexedDB, and prompts the user to beam them as soon as a peer connects.
 
 ---

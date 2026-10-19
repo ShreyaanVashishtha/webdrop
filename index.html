@@ -359,6 +359,87 @@
         </div>
     </div>
 
+    <!-- Multi-Channel Parallel SCTP Settings Modal -->
+    <div id="sctp-modal-overlay" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/80 backdrop-blur-md">
+        <div class="glass-panel p-6 w-full max-w-md transform scale-95 transition-transform duration-300 relative text-left" id="sctp-modal-card">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                        <i class="ph-fill ph-lightning text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Parallel SCTP Streams</h3>
+                        <p class="text-[11px] text-zinc-400">Multi-Channel WebRTC Acceleration</p>
+                    </div>
+                </div>
+                <button onclick="window.closeSctpSettingsModal()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-zinc-300 mb-4 leading-relaxed">
+                Standard WebRTC is constrained by a single SCTP buffer queue. WebDrop opens parallel SCTP DataChannels simultaneously and dynamically stripes file packets to saturate high-bandwidth Wi-Fi 6, Gigabit, and 10Gbps LAN connections.
+            </p>
+
+            <div class="space-y-2.5 mb-5" id="sctp-streams-selector">
+                <label onclick="window.selectSctpStreams(1)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300">1x</div>
+                        <div>
+                            <p class="text-xs font-semibold text-white">1 Stream (Standard)</p>
+                            <p class="text-[10px] text-zinc-400">Classic WebRTC single-stream mode</p>
+                        </div>
+                    </div>
+                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-1"></span>
+                </label>
+
+                <label onclick="window.selectSctpStreams(2)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold">2x</div>
+                        <div>
+                            <p class="text-xs font-semibold text-white">2 Streams (Accelerated)</p>
+                            <p class="text-[10px] text-zinc-400">Balanced dual-channel transfer</p>
+                        </div>
+                    </div>
+                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-2"></span>
+                </label>
+
+                <label onclick="window.selectSctpStreams(4)" class="flex items-center justify-between p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 cursor-pointer transition-all sctp-option-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">4x</div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs font-semibold text-white">4 Streams (Quad Turbo)</p>
+                                <span class="text-[9px] font-bold uppercase bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded">Recommended</span>
+                            </div>
+                            <p class="text-[10px] text-zinc-400">Peak throughput for Wi-Fi 6 & gigabit intranets</p>
+                        </div>
+                    </div>
+                    <span class="w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 flex items-center justify-center sctp-radio-4">
+                        <span class="w-1.5 h-1.5 rounded-full bg-black"></span>
+                    </span>
+                </label>
+
+                <label onclick="window.selectSctpStreams(8)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold">8x</div>
+                        <div>
+                            <p class="text-xs font-semibold text-white">8 Streams (Extreme Hyper)</p>
+                            <p class="text-[10px] text-zinc-400">Maximum line-rate saturation for 2.5G/10Gbps fiber LAN</p>
+                        </div>
+                    </div>
+                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-8"></span>
+                </label>
+            </div>
+
+            <div class="flex justify-end pt-3 border-t border-white/10">
+                <button onclick="window.closeSctpSettingsModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl font-semibold text-xs transition-colors shadow-lg shadow-amber-500/20">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Live Screen Cast Theater Modal -->
     <div id="screencast-modal-overlay" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/90 backdrop-blur-xl">
         <div class="glass-panel p-4 sm:p-6 w-full max-w-4xl max-h-[92vh] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden" id="screencast-modal-card">
@@ -559,6 +640,11 @@
                     <i class="ph-bold ph-pencil-simple text-[10px] text-zinc-500 group-hover:text-blue-400"></i>
                 </button>
 
+                <button onclick="window.openSctpSettingsModal()" id="header-sctp-btn" class="flex items-center gap-1.5 px-3 py-1.5 glass-panel !rounded-full text-xs font-medium text-amber-400 hover:text-white hover:border-amber-500/40 transition-all cursor-pointer group" title="Configure Multi-Channel Parallel SCTP Streams">
+                    <i class="ph-fill ph-lightning text-amber-400 group-hover:scale-110 transition-transform"></i>
+                    <span id="header-sctp-text">4x Parallel SCTP</span>
+                </button>
+
                 <div class="flex items-center space-x-2 px-4 py-2 glass-panel !rounded-full !py-1.5 !px-4 text-xs font-medium">
                     <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" id="status-dot"></div>
                     <span class="text-zinc-300" id="status-text">Initializing</span>
@@ -671,6 +757,9 @@
                 </div>
                 
                 <div class="flex items-center gap-2.5">
+                    <button onclick="window.openSctpSettingsModal()" id="sctp-turbo-btn" class="glass-btn text-amber-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-amber-500/30 hover:border-amber-500/60 transition-all" title="Configure Multi-Channel Parallel SCTP Streams">
+                        <i class="ph-bold ph-lightning text-sm"></i> <span id="sctp-badge-text">4x Turbo SCTP</span>
+                    </button>
                     <button onclick="window.toggleScreenCast()" id="cast-screen-btn" class="glass-btn text-purple-400 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-purple-500/30 hover:border-purple-500/60 transition-all" title="Stream your screen live to connected devices">
                         <i class="ph-bold ph-screencast text-sm"></i> <span id="cast-btn-text">Cast Screen</span>
                     </button>
@@ -727,6 +816,11 @@
                                 <div class="flex justify-between font-mono text-[11px] text-zinc-400 pt-0.5">
                                     <span id="transfer-speed" class="text-blue-400 font-medium">0 KB/s</span>
                                     <span id="transfer-eta">ETA: --</span>
+                                </div>
+                                <div class="pt-1 flex items-center justify-center">
+                                    <span id="transfer-sctp-badge" class="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                        <i class="ph-bold ph-lightning"></i> <span id="transfer-sctp-text">4x Parallel SCTP Active</span>
+                                    </span>
                                 </div>
                             </div>
 
@@ -830,6 +924,10 @@
         // Multi-Peer Mesh State
         const meshPeers = new Map(); // key: peerId -> { id, conn, name, iconInfo, e2ee: { ready, key, numbers, emojis } }
         let selectedTarget = 'all'; // 'all' or specific peerId
+
+        // Multi-Channel Parallel SCTP State
+        let sctpStreamsCount = parseInt(localStorage.getItem('webdrop_sctp_streams') || '4', 10);
+        const pendingSubChannels = new Map(); // peerId -> Array of subconnection objects
 
         // Screen Casting State
         let activeScreenStream = null;
@@ -1235,6 +1333,11 @@
         window.disconnectPeer = (peerId) => {
             const p = meshPeers.get(peerId);
             if (p) {
+                if (p.parallelChannels) {
+                    p.parallelChannels.forEach(c => {
+                        try { if (c !== p.conn && c.close) c.close(); } catch(e){}
+                    });
+                }
                 if (p.conn) p.conn.close();
                 meshPeers.delete(peerId);
                 showToast(`${p.name} left the room.`, 'info');
@@ -1319,6 +1422,7 @@
                 reliable: true,
                 metadata: { deviceName: getSavedDeviceName() }
             });
+            connection.isInitiator = true;
 
             connection.on('open', () => {
                 setupActiveConnection(connection);
@@ -1568,8 +1672,32 @@
                 }
             });
 
-            // Incoming connection handling (supports multiple mesh peers!)
+            // Incoming connection handling (supports multiple mesh peers & parallel SCTP channels)
             peer.on('connection', (connection) => {
+                if (connection.metadata?.type === 'parallel_sctp_stream') {
+                    const peerId = connection.peer;
+                    const p = meshPeers.get(peerId);
+                    if (p) {
+                        if (!p.parallelChannels) p.parallelChannels = [ p.conn ];
+                        if (!p.parallelChannels.includes(connection)) {
+                            p.parallelChannels.push(connection);
+                        }
+                        connection.on('data', (data) => handleIncomingData(data, peerId));
+                        connection.on('close', () => {
+                            if (p.parallelChannels) {
+                                p.parallelChannels = p.parallelChannels.filter(c => c !== connection);
+                            }
+                        });
+                        connection.on('error', (err) => console.warn('Subchannel error for peer:', peerId, err));
+                    } else {
+                        if (!pendingSubChannels.has(peerId)) {
+                            pendingSubChannels.set(peerId, []);
+                        }
+                        pendingSubChannels.get(peerId).push(connection);
+                    }
+                    return;
+                }
+
                 const deviceName = connection.metadata?.deviceName || 'Unknown Device';
                 pendingConn = connection;
                 showSecurityModal(connection.peer, deviceName);
@@ -1610,6 +1738,7 @@
             
             checkOPFSSupport();
             updateDeviceNameUI(getSavedDeviceName());
+            updateParallelSctpUI();
             setupDragAndDrop();
             setupVisibilityHandler();
             setupModalListeners();
@@ -1624,7 +1753,8 @@
                 { id: 'e2ee-modal-overlay', close: window.closeE2eeModal },
                 { id: 'add-peer-modal-overlay', close: window.closeAddPeerModal },
                 { id: 'screencast-modal-overlay', close: window.closeScreencastModal },
-                { id: 'offline-modal-overlay', close: window.closeOfflineModal }
+                { id: 'offline-modal-overlay', close: window.closeOfflineModal },
+                { id: 'sctp-modal-overlay', close: window.closeSctpSettingsModal }
             ];
 
             overlays.forEach(({ id, close }) => {
@@ -1645,6 +1775,7 @@
                     window.closeAddPeerModal();
                     window.closeScreencastModal();
                     window.closeOfflineModal();
+                    window.closeSctpSettingsModal();
                 }
             });
         }
@@ -1772,6 +1903,128 @@
             setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         };
 
+        // =========================================
+        // MULTI-CHANNEL PARALLEL SCTP ENGINE
+        // =========================================
+        function updateParallelSctpUI() {
+            const counts = [1, 2, 4, 8];
+            counts.forEach(c => {
+                const opt = document.querySelector(`.sctp-option-${c}`);
+                const radio = document.querySelector(`.sctp-radio-${c}`);
+                if (!opt || !radio) return;
+                if (c === sctpStreamsCount) {
+                    opt.className = `flex items-center justify-between p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 cursor-pointer transition-all sctp-option-${c}`;
+                    radio.className = `w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 flex items-center justify-center sctp-radio-${c}`;
+                    radio.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-black"></span>`;
+                } else {
+                    opt.className = `flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-${c}`;
+                    radio.className = `w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-${c}`;
+                    radio.innerHTML = ``;
+                }
+            });
+
+            const headerText = document.getElementById('header-sctp-text');
+            if (headerText) {
+                headerText.innerText = `${sctpStreamsCount}x Parallel SCTP`;
+            }
+
+            const badgeText = document.getElementById('sctp-badge-text');
+            if (badgeText) {
+                badgeText.innerText = `${sctpStreamsCount}x Turbo SCTP`;
+            }
+
+            const transferSctpText = document.getElementById('transfer-sctp-text');
+            if (transferSctpText) {
+                transferSctpText.innerText = `${sctpStreamsCount}x Parallel SCTP Active`;
+            }
+        }
+
+        window.openSctpSettingsModal = () => {
+            updateParallelSctpUI();
+            const overlay = document.getElementById('sctp-modal-overlay');
+            const card = document.getElementById('sctp-modal-card');
+            if (!overlay || !card) return;
+            overlay.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            });
+        };
+
+        window.closeSctpSettingsModal = () => {
+            const overlay = document.getElementById('sctp-modal-overlay');
+            const card = document.getElementById('sctp-modal-card');
+            if (!overlay || !card) return;
+            overlay.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        };
+
+        window.selectSctpStreams = (count) => {
+            const parsed = parseInt(count, 10) || 4;
+            sctpStreamsCount = parsed;
+            localStorage.setItem('webdrop_sctp_streams', parsed.toString());
+            updateParallelSctpUI();
+            showToast(`Configured ${parsed}x Parallel SCTP stream(s)`, 'success');
+
+            // Synchronize with active mesh peers
+            meshPeers.forEach(peerRecord => {
+                if (peerRecord.conn && peerRecord.conn.open) {
+                    if (peerRecord.parallelChannels && peerRecord.parallelChannels.length > sctpStreamsCount) {
+                        const excess = peerRecord.parallelChannels.splice(sctpStreamsCount);
+                        excess.forEach(c => {
+                            try { if (c !== peerRecord.conn && c.close) c.close(); } catch(e){}
+                        });
+                    } else {
+                        spawnParallelSCTPChannels(peerRecord);
+                    }
+                }
+            });
+        };
+
+        function spawnParallelSCTPChannels(peerRecord) {
+            if (!peerRecord || !peerRecord.conn || !peerRecord.conn.open) return;
+            if (!peerRecord.parallelChannels) {
+                peerRecord.parallelChannels = [peerRecord.conn];
+            }
+            if (sctpStreamsCount <= 1) return;
+
+            const currentCount = peerRecord.parallelChannels.length;
+            if (currentCount >= sctpStreamsCount) return;
+
+            for (let i = currentCount; i < sctpStreamsCount; i++) {
+                try {
+                    const subConn = peer.connect(peerRecord.id, {
+                        reliable: true,
+                        metadata: {
+                            type: 'parallel_sctp_stream',
+                            channelIdx: i,
+                            deviceName: getSavedDeviceName()
+                        }
+                    });
+                    subConn.isSubChannel = true;
+                    if (!peerRecord.parallelChannels.includes(subConn)) {
+                        peerRecord.parallelChannels.push(subConn);
+                    }
+
+                    subConn.on('open', () => {
+                        console.log(`Parallel SCTP subchannel ${i + 1}/${sctpStreamsCount} opened with peer ${peerRecord.id}`);
+                    });
+                    subConn.on('data', (data) => handleIncomingData(data, peerRecord.id));
+                    subConn.on('close', () => {
+                        if (peerRecord.parallelChannels) {
+                            peerRecord.parallelChannels = peerRecord.parallelChannels.filter(c => c !== subConn);
+                        }
+                    });
+                    subConn.on('error', (err) => console.warn(`Subchannel ${i} error:`, err));
+                } catch(err) {
+                    console.warn('Error spawning parallel subchannel:', err);
+                }
+            }
+        }
+
         function setupVisibilityHandler() {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
@@ -1832,6 +2085,7 @@
                 reliable: true,
                 metadata: { deviceName: getSavedDeviceName() }
             });
+            connection.isInitiator = true;
             
             connection.on('open', () => setupActiveConnection(connection));
             connection.on('error', () => {
@@ -1849,8 +2103,27 @@
                 conn: connection,
                 name: deviceName,
                 iconInfo: styleInfo,
-                e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false }
+                e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false },
+                parallelChannels: [ connection ]
             };
+
+            // Attach any subchannels that arrived before setupActiveConnection completed
+            if (pendingSubChannels.has(peerId)) {
+                const queued = pendingSubChannels.get(peerId);
+                queued.forEach(subConn => {
+                    if (!peerRecord.parallelChannels.includes(subConn)) {
+                        peerRecord.parallelChannels.push(subConn);
+                    }
+                    subConn.on('data', (data) => handleIncomingData(data, peerId));
+                    subConn.on('close', () => {
+                        if (peerRecord.parallelChannels) {
+                            peerRecord.parallelChannels = peerRecord.parallelChannels.filter(c => c !== subConn);
+                        }
+                    });
+                    subConn.on('error', (err) => console.warn('Queued subchannel error:', err));
+                });
+                pendingSubChannels.delete(peerId);
+            }
 
             meshPeers.set(peerId, peerRecord);
             pendingConn = null;
@@ -1860,6 +2133,11 @@
             connection.on('data', (data) => handleIncomingData(data, peerId));
             connection.on('close', () => window.disconnectPeer(peerId));
             connection.on('error', (err) => console.warn('Conn error for peer:', peerId, err));
+
+            // Initiator spawns parallel SCTP subchannels to reach the configured stream count
+            if (connection.isInitiator) {
+                spawnParallelSCTPChannels(peerRecord);
+            }
 
             updateActiveViewUI();
             checkPendingSharedItemsForMesh();
@@ -2022,21 +2300,57 @@
             metrics.lastSampleBytes = startOffset;
             updateTransferMetrics(transferState.offset, file.size);
 
+            // Ensure any target peer has spawned parallel subchannels if initiator
+            targets.forEach(t => {
+                if (t.parallelChannels && t.parallelChannels.length < sctpStreamsCount && t.conn?.isInitiator) {
+                    spawnParallelSCTPChannels(t);
+                }
+            });
+
             while (transferState.offset < file.size && isTransferring && targets.some(t => t.conn && t.conn.open)) {
-                // Backpressure flow control across all active targets
-                const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || t.conn?.bufferedAmount || 0));
-                if (maxBuffered > HIGH_WATER_MARK) {
-                    await new Promise(resolve => setTimeout(resolve, 30));
+                // Backpressure flow control: if any target has ALL channels saturated, pause briefly
+                let needsBackpressureWait = false;
+                for (const t of targets) {
+                    const channels = (t.parallelChannels && t.parallelChannels.length > 0)
+                        ? t.parallelChannels.filter(c => c && c.open)
+                        : (t.conn && t.conn.open ? [t.conn] : []);
+                    if (channels.length === 0) continue;
+                    const minBuf = Math.min(...channels.map(c => c.dataChannel?.bufferedAmount ?? c.bufferedAmount ?? 0));
+                    if (minBuf > HIGH_WATER_MARK) {
+                        needsBackpressureWait = true;
+                        break;
+                    }
+                }
+                if (needsBackpressureWait) {
+                    await new Promise(resolve => setTimeout(resolve, 20));
                     if (!isTransferring) return;
+                    continue;
                 }
 
                 const slice = file.slice(transferState.offset, transferState.offset + CHUNK_SIZE);
                 const rawBuffer = await slice.arrayBuffer();
                 if (!isTransferring) return;
 
-                // Transmit chunk (with AES-256-GCM encryption if peer handshake ready)
+                const chunkIndex = Math.floor(transferState.offset / CHUNK_SIZE);
+
+                // Transmit chunk across parallel channels using work-stealing backpressure
                 for (const t of targets) {
-                    if (!t.conn || !t.conn.open) continue;
+                    const channels = (t.parallelChannels && t.parallelChannels.length > 0)
+                        ? t.parallelChannels.filter(c => c && c.open)
+                        : (t.conn && t.conn.open ? [t.conn] : []);
+                    if (channels.length === 0) continue;
+
+                    // Select the least-buffered channel for optimal line-rate throughput
+                    let bestChannel = channels[0];
+                    let minBuf = bestChannel.dataChannel?.bufferedAmount ?? bestChannel.bufferedAmount ?? 0;
+                    for (let i = 1; i < channels.length; i++) {
+                        const ch = channels[i];
+                        const buf = ch.dataChannel?.bufferedAmount ?? ch.bufferedAmount ?? 0;
+                        if (buf < minBuf) {
+                            minBuf = buf;
+                            bestChannel = ch;
+                        }
+                    }
 
                     if (t.e2ee?.ready && t.e2ee.key) {
                         try {
@@ -2046,17 +2360,31 @@
                                 t.e2ee.key,
                                 rawBuffer
                             );
-                            // Packet structure: [0xEE magic byte (1) | IV (12) | ciphertext]
-                            const packet = new Uint8Array(1 + 12 + ciphertext.byteLength);
-                            packet[0] = 0xEE;
-                            packet.set(iv, 1);
-                            packet.set(new Uint8Array(ciphertext), 13);
-                            t.conn.send(packet.buffer);
+                            // Packet structure: [ 0xEF (1) | chunkIndex uint32 (4) | IV (12) | ciphertext ]
+                            const packet = new Uint8Array(17 + ciphertext.byteLength);
+                            packet[0] = 0xEF;
+                            const dv = new DataView(packet.buffer);
+                            dv.setUint32(1, chunkIndex, false);
+                            packet.set(iv, 5);
+                            packet.set(new Uint8Array(ciphertext), 17);
+                            bestChannel.send(packet.buffer);
                         } catch(err) {
-                            t.conn.send(rawBuffer);
+                            // Fallback plain sequenced packet
+                            const packet = new Uint8Array(5 + rawBuffer.byteLength);
+                            packet[0] = 0xD0;
+                            const dv = new DataView(packet.buffer);
+                            dv.setUint32(1, chunkIndex, false);
+                            packet.set(new Uint8Array(rawBuffer), 5);
+                            bestChannel.send(packet.buffer);
                         }
                     } else {
-                        t.conn.send(rawBuffer);
+                        // Plain sequenced packet: [ 0xD0 (1) | chunkIndex uint32 (4) | rawBuffer ]
+                        const packet = new Uint8Array(5 + rawBuffer.byteLength);
+                        packet[0] = 0xD0;
+                        const dv = new DataView(packet.buffer);
+                        dv.setUint32(1, chunkIndex, false);
+                        packet.set(new Uint8Array(rawBuffer), 5);
+                        bestChannel.send(packet.buffer);
                     }
                 }
 
@@ -2065,10 +2393,19 @@
             }
 
             if (transferState.offset >= file.size && isTransferring) {
-                // Wait for all targets to drain before sending EOF
+                // Wait for all channels across all targets to drain before sending EOF
                 const waitForDrain = () => {
                     if (!isTransferring) return;
-                    const maxBuffered = Math.max(...targets.map(t => t.conn?.dataChannel?.bufferedAmount || t.conn?.bufferedAmount || 0));
+                    let maxBuffered = 0;
+                    targets.forEach(t => {
+                        const channels = (t.parallelChannels && t.parallelChannels.length > 0)
+                            ? t.parallelChannels.filter(c => c && c.open)
+                            : (t.conn && t.conn.open ? [t.conn] : []);
+                        channels.forEach(c => {
+                            const buf = c.dataChannel?.bufferedAmount ?? c.bufferedAmount ?? 0;
+                            if (buf > maxBuffered) maxBuffered = buf;
+                        });
+                    });
                     if (maxBuffered > 0) {
                         setTimeout(waitForDrain, 25);
                     } else {
@@ -2143,11 +2480,15 @@
                     transferState = { 
                         role: 'receiver', 
                         receivedBuffers: [], 
+                        receivedChunks: {},
+                        receivedChunkIndices: new Set(),
+                        contiguousChunkIndex: Math.floor(resumeOffset / CHUNK_SIZE),
                         receivedBytes: resumeOffset, 
                         meta: msg,
                         opfsHandle: opfsHandle,
                         opfsWritable: opfsWritable,
                         opfsName: opfsName,
+                        opfsWritePromise: null,
                         lastCheckpointSave: resumeOffset,
                         senderPeerId: senderPeerId,
                         senderName: msg.senderName || peerRecord?.name || 'Peer'
@@ -2215,43 +2556,100 @@
                 const state = transferState;
                 if (!state.meta || !isTransferring) return;
 
-                let chunkData = data;
-                const rawBytes = new Uint8Array(data);
+                const rawBytes = (data instanceof Uint8Array) ? data : new Uint8Array(data);
+                let chunkIndex = 0;
+                let chunkData = null;
 
-                // Zero-Knowledge AES-256-GCM Decryption
-                if (rawBytes[0] === 0xEE && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 13) {
+                if (rawBytes[0] === 0xEF && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 17) {
+                    // Sequenced E2EE chunk: [ 0xEF (1) | chunkIndex (4) | IV (12) | ciphertext ]
+                    const dv = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
+                    chunkIndex = dv.getUint32(1, false);
+                    const iv = rawBytes.slice(5, 17);
+                    const ciphertext = rawBytes.slice(17);
                     try {
-                        const iv = rawBytes.slice(1, 13);
-                        const ciphertext = rawBytes.slice(13);
                         chunkData = await window.crypto.subtle.decrypt(
                             { name: "AES-GCM", iv: iv },
                             peerRecord.e2ee.key,
                             ciphertext
                         );
                     } catch(e) {
-                        console.error('Failed to decrypt chunk:', e);
+                        console.error('Failed to decrypt sequenced chunk:', e);
+                        return;
                     }
-                }
-
-                if (state.opfsWritable) {
+                } else if (rawBytes[0] === 0xD0 && rawBytes.byteLength >= 5) {
+                    // Sequenced Plain chunk: [ 0xD0 (1) | chunkIndex (4) | payload ]
+                    const dv = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
+                    chunkIndex = dv.getUint32(1, false);
+                    if (data instanceof ArrayBuffer) {
+                        chunkData = data.slice(5);
+                    } else if (ArrayBuffer.isView(data)) {
+                        chunkData = data.buffer.slice(data.byteOffset + 5, data.byteOffset + data.byteLength);
+                    } else {
+                        chunkData = rawBytes.slice(5).buffer;
+                    }
+                } else if (rawBytes[0] === 0xEE && peerRecord?.e2ee?.ready && peerRecord.e2ee.key && rawBytes.byteLength > 13) {
+                    // Legacy un-sequenced E2EE chunk: [ 0xEE (1) | IV (12) | ciphertext ]
+                    chunkIndex = state.nextLegacyIdx || 0;
+                    state.nextLegacyIdx = chunkIndex + 1;
+                    const iv = rawBytes.slice(1, 13);
+                    const ciphertext = rawBytes.slice(13);
                     try {
-                        await state.opfsWritable.write(chunkData);
+                        chunkData = await window.crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: iv },
+                            peerRecord.e2ee.key,
+                            ciphertext
+                        );
                     } catch(e) {
-                        state.opfsWritable = null;
-                        state.receivedBuffers.push(chunkData);
+                        console.error('Failed to decrypt legacy chunk:', e);
+                        return;
                     }
                 } else {
-                    state.receivedBuffers.push(chunkData);
+                    // Legacy un-sequenced Plain chunk
+                    chunkIndex = state.nextLegacyIdx || 0;
+                    state.nextLegacyIdx = chunkIndex + 1;
+                    chunkData = data;
                 }
 
-                state.receivedBytes += (chunkData.byteLength || data.byteLength);
+                if (!chunkData) return;
+
+                // De-duplicate if chunk arrived twice
+                if (!state.receivedChunkIndices) state.receivedChunkIndices = new Set();
+                if (state.receivedChunkIndices.has(chunkIndex)) return;
+                state.receivedChunkIndices.add(chunkIndex);
+
+                const chunkOffset = chunkIndex * CHUNK_SIZE;
+
+                if (state.opfsWritable) {
+                    state.opfsWritePromise = (state.opfsWritePromise || Promise.resolve()).then(async () => {
+                        if (state.opfsWritable) {
+                            await state.opfsWritable.seek(chunkOffset);
+                            await state.opfsWritable.write(chunkData);
+                        }
+                    }).catch(err => {
+                        console.warn('OPFS seek/write error, falling back to memory chunks:', err);
+                        state.opfsWritable = null;
+                        if (!state.receivedChunks) state.receivedChunks = {};
+                        state.receivedChunks[chunkIndex] = chunkData;
+                    });
+                } else {
+                    if (!state.receivedChunks) state.receivedChunks = {};
+                    state.receivedChunks[chunkIndex] = chunkData;
+                }
+
+                state.receivedBytes += (chunkData.byteLength || 0);
                 updateTransferMetrics(state.receivedBytes, state.meta.size);
 
-                // Checkpoint periodically (every 512 KB) for transfer resume resilience
+                // Checkpoint periodically (every 512 KB) with strictly contiguous safe byte offset
+                state.contiguousChunkIndex = state.contiguousChunkIndex || 0;
+                while (state.receivedChunkIndices.has(state.contiguousChunkIndex)) {
+                    state.contiguousChunkIndex++;
+                }
+                const safeCheckpointOffset = Math.min(state.contiguousChunkIndex * CHUNK_SIZE, state.meta.size);
+
                 if (state.opfsWritable && state.meta?.fileId && state.opfsName) {
-                    if (!state.lastCheckpointSave || (state.receivedBytes - state.lastCheckpointSave >= 512 * 1024)) {
-                        saveCheckpoint(state.meta.fileId, { opfsName: state.opfsName, size: state.meta.size, offset: state.receivedBytes });
-                        state.lastCheckpointSave = state.receivedBytes;
+                    if (!state.lastCheckpointSave || (safeCheckpointOffset - state.lastCheckpointSave >= 512 * 1024)) {
+                        saveCheckpoint(state.meta.fileId, { opfsName: state.opfsName, size: state.meta.size, offset: safeCheckpointOffset });
+                        state.lastCheckpointSave = safeCheckpointOffset;
                     }
                 }
             }
@@ -2272,6 +2670,9 @@
             
             if (transferState.opfsWritable) {
                 try {
+                    if (transferState.opfsWritePromise) {
+                        await transferState.opfsWritePromise.catch(() => {});
+                    }
                     if (shouldClearCheckpoint) {
                         await transferState.opfsWritable.abort();
                     } else {
@@ -2288,7 +2689,7 @@
                 }
             }
 
-            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null };
+            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null, opfsHandle: null, opfsWritable: null, opfsName: null };
             document.getElementById('transfer-overlay').classList.add('hidden');
             releaseWakeLock();
             showToast(reason, 'warn');
@@ -2304,6 +2705,9 @@
 
             if (state.opfsWritable && state.opfsHandle) {
                 try {
+                    if (state.opfsWritePromise) {
+                        await state.opfsWritePromise;
+                    }
                     await state.opfsWritable.close();
                     state.opfsWritable = null;
                     const opfsFile = await state.opfsHandle.getFile();
@@ -2314,7 +2718,19 @@
             }
 
             if (!fileOrBlob) {
-                fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta.mime });
+                const chunksObj = state.receivedChunks || {};
+                const totalChunks = Math.ceil(state.meta.size / CHUNK_SIZE);
+                const orderedBuffers = [];
+                for (let i = 0; i < totalChunks; i++) {
+                    if (chunksObj[i]) {
+                        orderedBuffers.push(chunksObj[i]);
+                    }
+                }
+                if (orderedBuffers.length === 0 && state.receivedBuffers && state.receivedBuffers.length > 0) {
+                    fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta.mime });
+                } else {
+                    fileOrBlob = new Blob(orderedBuffers, { type: state.meta.mime });
+                }
             }
 
             addFileToHistory(fileOrBlob, state.meta.name, state.meta.size, state.senderName);
@@ -2345,6 +2761,17 @@
                 qEl.innerText = `Queue: ${queueLeft} remaining`; 
             } else { 
                 qEl.classList.add('hidden'); 
+            }
+
+            const sctpBadge = document.getElementById('transfer-sctp-badge');
+            const sctpText = document.getElementById('transfer-sctp-text');
+            if (sctpBadge && sctpText) {
+                if (sctpStreamsCount > 1) {
+                    sctpBadge.classList.remove('hidden');
+                    sctpText.innerText = `${sctpStreamsCount}x Parallel SCTP Active`;
+                } else {
+                    sctpBadge.classList.add('hidden');
+                }
             }
             
             updateTransferMetrics(0, transferState.file?.size || transferState.meta?.size || 1);
@@ -3099,7 +3526,8 @@
                     conn: mockConn,
                     name: peerName,
                     iconInfo: { icon: 'ph-airplane-tilt', color: 'text-purple-400' },
-                    e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false }
+                    e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false },
+                    parallelChannels: [ mockConn ]
                 };
 
                 meshPeers.set(offlinePeerId, peerRecord);
