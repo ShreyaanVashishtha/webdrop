@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide & Apple Share Setup - WebDrop</title>
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #050505; 
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(37, 99, 235, 0.12), transparent 28%),
+                radial-gradient(circle at 85% 75%, rgba(147, 51, 234, 0.12), transparent 28%);
+            background-attachment: fixed;
+            color: #f4f4f5; 
+            min-height: 100vh;
+        }
+        font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel {
+            background: rgba(20, 20, 22, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        .step-number {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="px-4 sm:px-6 py-3.5 sticky top-0 z-50 bg-black/30 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="bg-gradient-to-tr from-blue-600 to-blue-400 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                    <i class="ph-fill ph-paper-plane-tilt text-white text-lg"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-lg font-bold tracking-tight">WebDrop</span>
+                    <span class="text-xs text-blue-400 font-semibold uppercase tracking-wider hidden sm:inline">Guide</span>
+                </div>
+            </a>
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="glass-btn text-zinc-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                    <i class="ph-bold ph-arrow-left"></i> <span>Back to App</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-4xl mx-auto p-4 sm:p-6 w-full py-8 sm:py-12 space-y-10">
+
+        <!-- Hero Header Card -->
+        <div class="glass-panel p-6 sm:p-10 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-60"></div>
+            
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-4">
+                <i class="ph-fill ph-book-open text-sm"></i> Official User Manual & Setup Guide
+            </div>
+            
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
+                Getting Started with <span class="gradient-text">WebDrop</span>
+            </h1>
+            <p class="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-2xl">
+                Learn how to beam unlimited files across your phones, tablets, laptops, and desktops, install WebDrop as a high-performance Progressive Web App (PWA), and integrate directly with the native Apple Share Sheet.
+            </p>
+
+            <!-- Quick Navigation Jump Pills -->
+            <div class="flex flex-wrap gap-2 pt-6 mt-6 border-t border-white/10 text-xs font-semibold">
+                <a href="#quick-start" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <i class="ph-bold ph-lightning text-amber-400"></i> Quick Start
+                </a>
+                <a href="#apple-share" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 border-blue-500/30 text-blue-300">
+                    <i class="ph-fill ph-apple-logo text-blue-400"></i> Apple Share Menu
+                </a>
+                <a href="#pwa-install" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <i class="ph-bold ph-download-simple text-purple-400"></i> PWA Installation
+                </a>
+                <a href="#features" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <i class="ph-bold ph-sparkle text-pink-400"></i> Advanced Features
+                </a>
+                <a href="#faq" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <i class="ph-bold ph-question text-emerald-400"></i> FAQ
+                </a>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 1: QUICK START ================= -->
+        <section id="quick-start" class="glass-panel p-6 sm:p-10 space-y-6">
+            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div class="p-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl">
+                    <i class="ph-bold ph-paper-plane-tilt text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight">1. Quick Start: Beaming Files in 3 Steps</h2>
+                    <p class="text-xs sm:text-sm text-zinc-400">Zero accounts, zero configuration, zero cloud uploads.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Step 1 -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg step-number text-white font-bold text-sm flex items-center justify-center mb-4">1</div>
+                        <h3 class="font-semibold text-white text-base mb-1.5">Open WebDrop</h3>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            Open <strong class="text-white">WebDrop</strong> on both devices (phone, laptop, tablet). Each device generates an ephemeral 5-digit PIN and activates local radar discovery.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/5 text-[11px] text-blue-400 font-mono">
+                        Works in Safari, Chrome, Edge & Firefox
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg step-number text-white font-bold text-sm flex items-center justify-center mb-4">2</div>
+                        <h3 class="font-semibold text-white text-base mb-1.5">Pair Devices</h3>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            Tap the nearby device icon on the radar, type their 5-digit PIN in <em>Manual Connect</em>, or scan their QR code with your phone camera. Accept the connection prompt.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/5 text-[11px] text-emerald-400 font-mono">
+                        Direct encrypted WebRTC peer link
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="w-8 h-8 rounded-lg step-number text-white font-bold text-sm flex items-center justify-center mb-4">3</div>
+                        <h3 class="font-semibold text-white text-base mb-1.5">Drop & Beam</h3>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            Drag-and-drop or browse files (photos, 4K videos, zip files, folders, or docs) or paste text snippets. Files transfer directly device-to-device at full Wi-Fi speed!
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/5 text-[11px] text-amber-400 font-mono">
+                        4x Turbo SCTP streaming enabled
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: APPLE SHARE MENU ================= -->
+        <section id="apple-share" class="glass-panel p-6 sm:p-10 space-y-6 border-blue-500/20 bg-blue-500/[0.03]">
+            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
+                    <i class="ph-fill ph-apple-logo text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight">2. Native Apple Share Menu Integration</h2>
+                        <span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full uppercase border border-blue-500/30">iOS AirDrop Alternative</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-zinc-400">Share photos, videos, and files directly from Apple Photos and the Files app into WebDrop.</p>
+                </div>
+            </div>
+
+            <!-- How It Works Callout -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-sm space-y-2">
+                <div class="flex items-center gap-2 text-blue-300 font-semibold">
+                    <i class="ph-bold ph-info text-base"></i> How the Apple Share Sheet Integration Works
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                    By installing WebDrop to your iPhone or iPad Home Screen via Safari, WebDrop registers as a native system <strong>Web Share Target</strong>. When you tap the native Apple Share button (<i class="ph-bold ph-export"></i> / <i class="ph-bold ph-share"></i>) in <strong class="text-white">Photos</strong>, <strong class="text-white">Files</strong>, or Safari, <strong class="text-white">WebDrop appears directly alongside AirDrop and Messages</strong>!
+                </p>
+            </div>
+
+            <!-- Visual Step Walkthrough -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+                    <i class="ph-bold ph-steps text-blue-400"></i> Step-by-Step Setup & Usage (iOS & iPadOS)
+                </h3>
+
+                <div class="space-y-3">
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
+                        <div class="space-y-1">
+                            <p class="font-semibold text-white text-sm">Install WebDrop to your Home Screen (Required)</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">
+                                Open WebDrop in <strong class="text-white">Safari</strong>, tap the Share icon (<i class="ph-bold ph-export text-blue-400"></i>), scroll down and tap <strong class="text-white">"Add to Home Screen"</strong>. <em>(Apple requires WebDrop to be on the Home Screen for system-level Share Sheet access.)</em>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
+                        <div class="space-y-1">
+                            <p class="font-semibold text-white text-sm">Launch WebDrop from your Home Screen once</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">
+                                Tap the new WebDrop icon on your Home Screen to launch it in standalone app mode. This registers the Service Worker and file receiver with iOS.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
+                        <div class="space-y-1">
+                            <p class="font-semibold text-white text-sm">Select any Photo, Video, or Document in iOS</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">
+                                Open Apple <strong class="text-white">Photos</strong>, the <strong class="text-white">Files</strong> app, or any third-party app. Select the items you wish to send and tap the native iOS <strong class="text-white">Share button</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
+                        <div class="space-y-1">
+                            <p class="font-semibold text-white text-sm">Tap "WebDrop" in the Share Sheet App Row</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">
+                                Swipe through the app row (AirDrop, Messages, Mail) and tap <strong class="text-white">WebDrop</strong>.
+                            </p>
+                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 mt-2">
+                                <strong>Tip if WebDrop doesn't appear:</strong> Swipe to the end of the app icons, tap <strong class="text-white">More (...)</strong>, tap <strong class="text-white">Edit</strong> in the top right, and tap the green <strong>(+)</strong> next to WebDrop to add it to your Favorites.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</div>
+                        <div class="space-y-1">
+                            <p class="font-semibold text-white text-sm">Auto-Queue & Beam Instantly</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">
+                                WebDrop opens automatically with a blue banner: <strong class="text-blue-300">"Files Queued from Share Sheet"</strong>. Simply connect to your target device (Android, Mac, PC, Linux) and your files beam across without any intermediary server!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AirDrop vs WebDrop Comparison Table -->
+            <div class="pt-4 border-t border-white/10 space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-300">Why Use WebDrop Over AirDrop?</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border border-white/10 rounded-xl overflow-hidden">
+                        <thead class="bg-white/5 text-zinc-300 font-semibold border-b border-white/10">
+                            <tr>
+                                <th class="p-3">Feature</th>
+                                <th class="p-3 text-blue-400">WebDrop</th>
+                                <th class="p-3 text-zinc-400">Apple AirDrop</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-zinc-400">
+                            <tr>
+                                <td class="p-3 font-medium text-white">Cross-Platform</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> iOS, Android, Mac, Windows, Linux</td>
+                                <td class="p-3 text-red-400"><i class="ph-bold ph-x"></i> Apple Devices Only</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium text-white">No Apple ID Required</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Completely Anonymous</td>
+                                <td class="p-3 text-zinc-500">Requires Apple ID / Contacts</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium text-white">Multi-Device Mesh</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Broadcast to 3+ devices at once</td>
+                                <td class="p-3 text-red-400"><i class="ph-bold ph-x"></i> 1-to-1 Only</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium text-white">Native Apple Share Sheet</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Supported via PWA</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Native System</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: PWA INSTALLATION GUIDE ================= -->
+        <section id="pwa-install" class="glass-panel p-6 sm:p-10 space-y-6">
+            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div class="p-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-xl">
+                    <i class="ph-bold ph-device-mobile text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight">3. Progressive Web App (PWA) Installation</h2>
+                    <p class="text-xs sm:text-sm text-zinc-400">Install WebDrop for a native standalone app experience on any OS.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- iOS Safari -->
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-blue-500/20 text-blue-400 rounded-xl text-lg">
+                            <i class="ph-fill ph-device-mobile"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">Apple iOS / iPadOS</h3>
+                            <p class="text-[11px] text-zinc-400">iPhone & iPad (Safari)</p>
+                        </div>
+                    </div>
+                    <ol class="list-decimal list-inside text-xs text-zinc-300 space-y-2 pl-1 leading-relaxed">
+                        <li>Open WebDrop in <strong class="text-white">Safari</strong>.</li>
+                        <li>Tap the <strong class="text-white">Share</strong> button (<i class="ph-bold ph-export text-blue-400"></i>) at the bottom toolbar.</li>
+                        <li>Scroll down and select <strong class="text-white">"Add to Home Screen"</strong>.</li>
+                        <li>Tap <strong class="text-white">Add</strong> in the top-right corner.</li>
+                        <li>WebDrop will now run in full screen without browser bars and handle file sharing!</li>
+                    </ol>
+                </div>
+
+                <!-- Android Chrome -->
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-lg">
+                            <i class="ph-fill ph-android-logo"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">Android</h3>
+                            <p class="text-[11px] text-zinc-400">Google Chrome, Edge, Samsung Internet</p>
+                        </div>
+                    </div>
+                    <ol class="list-decimal list-inside text-xs text-zinc-300 space-y-2 pl-1 leading-relaxed">
+                        <li>Open WebDrop in <strong class="text-white">Chrome</strong>.</li>
+                        <li>Tap the <strong class="text-white">"Install app"</strong> banner at the bottom or tap the menu (<i class="ph-bold ph-dots-three-vertical"></i>).</li>
+                        <li>Select <strong class="text-white">"Install WebDrop"</strong> or "Add to Home screen".</li>
+                        <li>Confirm the installation prompt.</li>
+                        <li>WebDrop integrates into your app drawer and native Android Share Sheet!</li>
+                    </ol>
+                </div>
+
+                <!-- macOS Sonoma+ & Chrome -->
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-purple-500/20 text-purple-400 rounded-xl text-lg">
+                            <i class="ph-fill ph-desktop"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">macOS (MacBook, iMac, Mac mini)</h3>
+                            <p class="text-[11px] text-zinc-400">Safari (Sonoma / Sequoia) & Chrome</p>
+                        </div>
+                    </div>
+                    <ol class="list-decimal list-inside text-xs text-zinc-300 space-y-2 pl-1 leading-relaxed">
+                        <li><strong>Safari:</strong> In the top menu bar, click <strong class="text-white">File</strong> &rarr; <strong class="text-white">"Add to Dock..."</strong> &rarr; Click <strong class="text-white">Add</strong>.</li>
+                        <li><strong>Chrome / Brave:</strong> Click the <strong class="text-white">Install</strong> icon in the address bar (<i class="ph-bold ph-arrow-circle-down"></i>) or Menu &rarr; Save and share &rarr; Install WebDrop.</li>
+                        <li>Launches as a dedicated standalone Mac window in your Dock!</li>
+                    </ol>
+                </div>
+
+                <!-- Windows 11 / 10 -->
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-blue-500/20 text-blue-400 rounded-xl text-lg">
+                            <i class="ph-fill ph-windows-logo"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">Windows 11 / 10</h3>
+                            <p class="text-[11px] text-zinc-400">Microsoft Edge & Google Chrome</p>
+                        </div>
+                    </div>
+                    <ol class="list-decimal list-inside text-xs text-zinc-300 space-y-2 pl-1 leading-relaxed">
+                        <li>Open WebDrop in <strong class="text-white">Edge</strong> or <strong class="text-white">Chrome</strong>.</li>
+                        <li>Click the <strong class="text-white">App Available / Install</strong> button in the right corner of the address bar.</li>
+                        <li>Click <strong class="text-white">Install</strong>.</li>
+                        <li>Optionally pin WebDrop to your Windows Taskbar or Start Menu.</li>
+                    </ol>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: ADVANCED FEATURES ================= -->
+        <section id="features" class="glass-panel p-6 sm:p-10 space-y-6">
+            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div class="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+                    <i class="ph-fill ph-lightning text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight">4. Advanced Power Features</h2>
+                    <p class="text-xs sm:text-sm text-zinc-400">Under the hood capabilities engineered for ultimate performance.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                
+                <!-- Parallel SCTP -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-2">
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                        <i class="ph-bold ph-lightning text-base"></i> Multi-Channel Parallel SCTP Turbo
+                    </div>
+                    <p class="text-zinc-400 leading-relaxed">
+                        WebRTC is typically limited to a single sequential queue. WebDrop opens parallel SCTP data lanes with pipelined dynamic watermarking (256KB &ndash; 2048KB) to saturate gigabit Wi-Fi 6, 2.5Gbps, and 10Gbps fiber connections.
+                    </p>
+                    <p class="text-zinc-500">Configure 1x, 2x, 4x (Recommended), or 8x streams from the lightning pill in the header.</p>
+                </div>
+
+                <!-- Screen Casting -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-2">
+                    <div class="flex items-center gap-2 text-purple-400 font-bold text-sm">
+                        <i class="ph-bold ph-screencast text-base"></i> 60 FPS Ultra-Low Latency Screen Cast
+                    </div>
+                    <p class="text-zinc-400 leading-relaxed">
+                        Stream your display, an active application window, or a specific browser tab live to all connected devices in the mesh room. Perfect for impromptu meetings, slideshows, code review, or collaborative debugging.
+                    </p>
+                    <p class="text-zinc-500">Hardware-accelerated VP8/VP9 video encoding with real-time peer playback.</p>
+                </div>
+
+                <!-- Airplane Mode Handshake -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-2">
+                    <div class="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                        <i class="ph-bold ph-airplane-tilt text-base"></i> Zero-Internet Airplane Mode (QR Handshake)
+                    </div>
+                    <p class="text-zinc-400 leading-relaxed">
+                        No Wi-Fi? No cellular signal? In an air-gapped secure environment or on a plane? WebDrop features visual optical SDP signaling. Devices exchange WebRTC handshake tokens purely via animated camera QR scanning.
+                    </p>
+                    <p class="text-zinc-500">100% offline, decentralized, and zero internet required.</p>
+                </div>
+
+                <!-- E2EE Verification -->
+                <div class="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-2">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                        <i class="ph-bold ph-shield-check text-base"></i> Zero-Knowledge E2EE & Safety Fingerprints
+                    </div>
+                    <p class="text-zinc-400 leading-relaxed">
+                        In addition to DTLS/SCTP wire encryption, files are encrypted at the application layer with AES-256-GCM via ephemeral ECDH P-256 key exchange. Compare cryptographic safety emojis and numbers to ensure zero tampering.
+                    </p>
+                    <p class="text-zinc-500">Keys are generated locally in RAM and destroyed upon session disconnection.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: FAQ & TROUBLESHOOTING ================= -->
+        <section id="faq" class="glass-panel p-6 sm:p-10 space-y-6">
+            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl">
+                    <i class="ph-bold ph-question text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight">5. Troubleshooting & Frequently Asked Questions</h2>
+                    <p class="text-xs sm:text-sm text-zinc-400">Common questions and helpful tips for seamless transfers.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm">
+                
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-1.5">
+                    <h4 class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-caret-right text-blue-400"></i> Why don't I see WebDrop in my iPhone's Share Sheet?
+                    </h4>
+                    <p class="text-zinc-400 leading-relaxed pl-5">
+                        Apple's WebKit requires WebDrop to be added to your Home Screen via Safari (<strong class="text-white">Share &rarr; Add to Home Screen</strong>). Once added, tap the WebDrop icon on your Home Screen to launch it once. It will then appear in the native iOS Share Sheet across all apps.
+                    </p>
+                </div>
+
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-1.5">
+                    <h4 class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-caret-right text-blue-400"></i> My devices are not discovering each other on the radar. What can I do?
+                    </h4>
+                    <p class="text-zinc-400 leading-relaxed pl-5">
+                        Radar discovery relies on devices sharing a common public IP address (such as being connected to the same home or office Wi-Fi network). If devices are on different networks (e.g. one on Wi-Fi and one on cellular), simply use the <strong class="text-white">5-digit PIN</strong> or click <strong class="text-white">Copy Invite Link</strong> or scan the <strong class="text-white">QR Code</strong> to connect immediately.
+                    </p>
+                </div>
+
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-1.5">
+                    <h4 class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-caret-right text-blue-400"></i> Is there any file size limit?
+                    </h4>
+                    <p class="text-zinc-400 leading-relaxed pl-5">
+                        No. WebDrop supports large files (including 10GB+ videos, disk images, and massive archives). WebDrop streams file chunks directly using the browser's sandboxed Origin Private File System (OPFS), preventing high memory usage or tab crashes.
+                    </p>
+                </div>
+
+                <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-1.5">
+                    <h4 class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-caret-right text-blue-400"></i> Do files touch any server during transfer?
+                    </h4>
+                    <p class="text-zinc-400 leading-relaxed pl-5">
+                        Never. All data packets travel directly between devices through peer-to-peer WebRTC connections. WebDrop maintains zero file storage, zero logging, and zero user accounts.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Bottom Action CTA -->
+        <div class="glass-panel p-8 text-center space-y-4">
+            <h3 class="text-2xl font-bold tracking-tight">Ready to beam files?</h3>
+            <p class="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">
+                Return to WebDrop now to connect with your devices and enjoy instant, private peer-to-peer sharing.
+            </p>
+            <div class="pt-2">
+                <a href="index.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-500/25 transition-transform hover:scale-105">
+                    <i class="ph-fill ph-paper-plane-tilt"></i> Open WebDrop
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 px-4 text-center text-xs text-zinc-500 flex flex-wrap items-center justify-center gap-3 border-t border-white/5">
+        <span>WebDrop &copy; 2026</span>
+        <span>&bull;</span>
+        <a href="index.html" class="hover:text-zinc-300 transition-colors">App Home</a>
+        <span>&bull;</span>
+        <a href="privacy.html" class="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+        <span>&bull;</span>
+        <a href="terms.html" class="hover:text-zinc-300 transition-colors">Terms of Service</a>
+        <span>&bull;</span>
+        <a href="https://github.com/ShreyaanVashishtha/webdrop" target="_blank" rel="noopener noreferrer" class="hover:text-zinc-300 transition-colors flex items-center gap-1">
+            <i class="ph-bold ph-github-logo"></i> GitHub
+        </a>
+    </footer>
+
+</body>
+</html>
