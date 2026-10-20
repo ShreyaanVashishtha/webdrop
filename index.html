@@ -359,86 +359,7 @@
         </div>
     </div>
 
-    <!-- Multi-Channel Parallel SCTP Settings Modal -->
-    <div id="sctp-modal-overlay" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 bg-black/80 backdrop-blur-md">
-        <div class="glass-panel p-5 sm:p-6 w-full max-w-md transform scale-95 transition-transform duration-300 relative text-left max-h-[92vh] overflow-y-auto" id="sctp-modal-card">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
-                        <i class="ph-fill ph-lightning text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-white">Parallel SCTP Streams</h3>
-                        <p class="text-[11px] text-zinc-400">Multi-Channel WebRTC Acceleration</p>
-                    </div>
-                </div>
-                <button onclick="window.closeSctpSettingsModal()" class="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors">
-                    <i class="ph-bold ph-x text-lg"></i>
-                </button>
-            </div>
 
-            <p class="text-xs text-zinc-300 mb-4 leading-relaxed">
-                Standard WebRTC is constrained by a single SCTP buffer queue. WebDrop opens parallel SCTP DataChannels simultaneously and dynamically stripes file packets to saturate high-bandwidth Wi-Fi 6, Gigabit, and 10Gbps LAN connections.
-            </p>
-
-            <div class="space-y-2.5 mb-5" id="sctp-streams-selector">
-                <label onclick="window.selectSctpStreams(1)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-1">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300">1x</div>
-                        <div>
-                            <p class="text-xs font-semibold text-white">1 Stream (Standard)</p>
-                            <p class="text-[10px] text-zinc-400">Classic WebRTC single-stream mode</p>
-                        </div>
-                    </div>
-                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-1"></span>
-                </label>
-
-                <label onclick="window.selectSctpStreams(2)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-2">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold">2x</div>
-                        <div>
-                            <p class="text-xs font-semibold text-white">2 Streams (Accelerated)</p>
-                            <p class="text-[10px] text-zinc-400">Balanced dual-channel transfer</p>
-                        </div>
-                    </div>
-                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-2"></span>
-                </label>
-
-                <label onclick="window.selectSctpStreams(4)" class="flex items-center justify-between p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 cursor-pointer transition-all sctp-option-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">4x</div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <p class="text-xs font-semibold text-white">4 Streams (Quad Turbo)</p>
-                                <span class="text-[9px] font-bold uppercase bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded">Recommended</span>
-                            </div>
-                            <p class="text-[10px] text-zinc-400">Peak throughput for Wi-Fi 6 & gigabit intranets</p>
-                        </div>
-                    </div>
-                    <span class="w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 flex items-center justify-center sctp-radio-4">
-                        <span class="w-1.5 h-1.5 rounded-full bg-black"></span>
-                    </span>
-                </label>
-
-                <label onclick="window.selectSctpStreams(8)" class="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-8">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold">8x</div>
-                        <div>
-                            <p class="text-xs font-semibold text-white">8 Streams (Extreme Hyper)</p>
-                            <p class="text-[10px] text-zinc-400">Maximum line-rate saturation for 2.5G/10Gbps fiber LAN</p>
-                        </div>
-                    </div>
-                    <span class="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-8"></span>
-                </label>
-            </div>
-
-            <div class="flex justify-end pt-3 border-t border-white/10">
-                <button onclick="window.closeSctpSettingsModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl font-semibold text-xs transition-colors shadow-lg shadow-amber-500/20">
-                    Done
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Live Screen Cast Theater Modal -->
     <div id="screencast-modal-overlay" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-300 bg-black/90 backdrop-blur-xl">
@@ -640,11 +561,6 @@
                     <i class="ph-bold ph-pencil-simple text-[10px] text-zinc-500 group-hover:text-blue-400 shrink-0 hidden sm:inline"></i>
                 </button>
 
-                <button onclick="window.openSctpSettingsModal()" id="header-sctp-btn" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 glass-panel !rounded-full text-xs font-medium text-amber-400 hover:text-white hover:border-amber-500/40 transition-all cursor-pointer group shrink-0" title="Configure Multi-Channel Parallel SCTP Streams">
-                    <i class="ph-fill ph-lightning text-amber-400 group-hover:scale-110 transition-transform shrink-0"></i>
-                    <span id="header-sctp-text" class="hidden sm:inline">4x Parallel SCTP</span>
-                    <span id="header-sctp-text-mobile" class="sm:hidden font-mono font-semibold">4x</span>
-                </button>
 
                 <div class="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3.5 py-1.5 glass-panel !rounded-full text-xs font-medium shrink-0" title="Signaling & WebRTC Status">
                     <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shrink-0" id="status-dot"></div>
@@ -761,11 +677,7 @@
                         <p class="font-semibold text-sm sm:text-lg flex items-center gap-2 truncate" id="connected-id-display">Mesh Room</p>
                     </div>
                 </div>
-                
                 <div class="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
-                    <button onclick="window.openSctpSettingsModal()" id="sctp-turbo-btn" class="glass-btn text-amber-400 hover:text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-amber-500/30 hover:border-amber-500/60 transition-all" title="Configure Multi-Channel Parallel SCTP Streams">
-                        <i class="ph-bold ph-lightning text-sm"></i> <span id="sctp-badge-text">4x Turbo</span>
-                    </button>
                     <button onclick="window.toggleScreenCast()" id="cast-screen-btn" class="glass-btn text-purple-400 hover:text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold border-purple-500/30 hover:border-purple-500/60 transition-all" title="Stream your screen live to connected devices">
                         <i class="ph-bold ph-screencast text-sm"></i> <span id="cast-btn-text">Cast</span>
                     </button>
@@ -823,11 +735,7 @@
                                     <span id="transfer-speed" class="text-blue-400 font-medium">0 KB/s</span>
                                     <span id="transfer-eta">ETA: --</span>
                                 </div>
-                                <div class="pt-1 flex items-center justify-center">
-                                    <span id="transfer-sctp-badge" class="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                                        <i class="ph-bold ph-lightning"></i> <span id="transfer-sctp-text">4x Parallel SCTP Active</span>
-                                    </span>
-                                </div>
+
                             </div>
 
                             <button onclick="window.cancelTransfer()" class="mt-4 sm:mt-5 px-4 py-1.5 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all flex items-center gap-1.5 cursor-pointer">
@@ -915,9 +823,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-        const CHUNK_SIZE = 64 * 1024; // 64 KB per chunk (optimal SCTP message size)
-        const HIGH_WATER_MARK = 1024 * 1024; // 1 MB backpressure high-water mark
-        const LOW_WATER_MARK = 256 * 1024; // 256 KB low-water mark to resume streaming
+        const CHUNK_SIZE = 256 * 1024; // 256 KB per chunk (matching webdrop_p2p_transfer)
         
         let peer = null;
         let pendingConn = null;
@@ -926,7 +832,7 @@
         let wakeLock = null;
         let fileQueue = [];
         let isTransferring = false;
-        let transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null, senderPeerId: null };
+        let transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null, senderPeerId: null, targets: [], targetAcks: new Set(), isSendingChunk: false, isAssembling: false };
         let metrics = { totalBytes: 0, lastSampleTime: 0, lastSampleBytes: 0, speed: 0 };
         let receivedItemsCount = 0;
         let opfsAvailable = false;
@@ -934,9 +840,6 @@
         // Multi-Peer Mesh State
         const meshPeers = new Map(); // key: peerId -> { id, conn, name, iconInfo, e2ee: { ready, key, numbers, emojis } }
         let selectedTarget = 'all'; // 'all' or specific peerId
-
-        // Multi-Channel Parallel SCTP State
-        let sctpStreamsCount = parseInt(localStorage.getItem('webdrop_sctp_streams') || '4', 10);
 
         // Screen Casting State
         let activeScreenStream = null;
@@ -1358,11 +1261,6 @@
         window.disconnectPeer = (peerId) => {
             const p = meshPeers.get(peerId);
             if (p) {
-                if (p.parallelChannels) {
-                    p.parallelChannels.forEach(c => {
-                        try { if (c !== p.conn && c.close) c.close(); } catch(e){}
-                    });
-                }
                 if (p.conn) p.conn.close();
                 meshPeers.delete(peerId);
                 showToast(`${p.name} left the room.`, 'info');
@@ -1372,6 +1270,26 @@
                 screenCastCalls.delete(peerId);
             }
             if (selectedTarget === peerId) selectedTarget = 'all';
+
+            // Safety if peer disconnects during active transfer
+            if (isTransferring && transferState) {
+                if (transferState.role === 'sender' && transferState.targets) {
+                    transferState.targets = transferState.targets.filter(t => t.id !== peerId);
+                    const openTargets = transferState.targets.filter(t => t.conn && t.conn.open);
+                    if (openTargets.length === 0) {
+                        handleTransferCancelled('All target connections closed.');
+                    } else if (!transferState.isSendingChunk) {
+                        const allAcked = openTargets.every(t => transferState.targetAcks.has(t.id));
+                        if (allAcked || transferState.targetAcks.size >= openTargets.length) {
+                            transferState.targetAcks.clear();
+                            sendNextChunk();
+                        }
+                    }
+                } else if (transferState.role === 'receiver' && transferState.senderPeerId === peerId) {
+                    handleTransferCancelled('Sender disconnected.');
+                }
+            }
+
             updateActiveViewUI();
         };
 
@@ -1776,7 +1694,6 @@
             
             checkOPFSSupport();
             updateDeviceNameUI(getSavedDeviceName());
-            updateParallelSctpUI();
             setupDragAndDrop();
             setupVisibilityHandler();
             setupModalListeners();
@@ -1791,8 +1708,7 @@
                 { id: 'e2ee-modal-overlay', close: window.closeE2eeModal },
                 { id: 'add-peer-modal-overlay', close: window.closeAddPeerModal },
                 { id: 'screencast-modal-overlay', close: window.closeScreencastModal },
-                { id: 'offline-modal-overlay', close: window.closeOfflineModal },
-                { id: 'sctp-modal-overlay', close: window.closeSctpSettingsModal }
+                { id: 'offline-modal-overlay', close: window.closeOfflineModal }
             ];
 
             overlays.forEach(({ id, close }) => {
@@ -1813,7 +1729,6 @@
                     window.closeAddPeerModal();
                     window.closeScreencastModal();
                     window.closeOfflineModal();
-                    window.closeSctpSettingsModal();
                 }
             });
         }
@@ -1941,89 +1856,7 @@
             setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         };
 
-        // =========================================
-        // MULTI-CHANNEL PARALLEL SCTP ENGINE
-        // =========================================
-        function updateParallelSctpUI() {
-            const counts = [1, 2, 4, 8];
-            counts.forEach(c => {
-                const opt = document.querySelector(`.sctp-option-${c}`);
-                const radio = document.querySelector(`.sctp-radio-${c}`);
-                if (!opt || !radio) return;
-                if (c === sctpStreamsCount) {
-                    opt.className = `flex items-center justify-between p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 cursor-pointer transition-all sctp-option-${c}`;
-                    radio.className = `w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 flex items-center justify-center sctp-radio-${c}`;
-                    radio.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-black"></span>`;
-                } else {
-                    opt.className = `flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all sctp-option-${c}`;
-                    radio.className = `w-4 h-4 rounded-full border border-white/30 flex items-center justify-center sctp-radio-${c}`;
-                    radio.innerHTML = ``;
-                }
-            });
 
-            const headerText = document.getElementById('header-sctp-text');
-            if (headerText) {
-                headerText.innerText = `${sctpStreamsCount}x Parallel SCTP`;
-            }
-
-            const headerTextMobile = document.getElementById('header-sctp-text-mobile');
-            if (headerTextMobile) {
-                headerTextMobile.innerText = `${sctpStreamsCount}x`;
-            }
-
-            const badgeText = document.getElementById('sctp-badge-text');
-            if (badgeText) {
-                badgeText.innerText = `${sctpStreamsCount}x Turbo`;
-            }
-
-            const transferSctpText = document.getElementById('transfer-sctp-text');
-            if (transferSctpText) {
-                transferSctpText.innerText = `${sctpStreamsCount}x Parallel SCTP Active`;
-            }
-        }
-
-        window.openSctpSettingsModal = () => {
-            updateParallelSctpUI();
-            const overlay = document.getElementById('sctp-modal-overlay');
-            const card = document.getElementById('sctp-modal-card');
-            if (!overlay || !card) return;
-            overlay.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                overlay.classList.remove('opacity-0');
-                card.classList.remove('scale-95');
-            });
-        };
-
-        window.closeSctpSettingsModal = () => {
-            const overlay = document.getElementById('sctp-modal-overlay');
-            const card = document.getElementById('sctp-modal-card');
-            if (!overlay || !card) return;
-            overlay.classList.add('opacity-0');
-            card.classList.add('scale-95');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 300);
-        };
-
-        function getDynamicHighWaterMark() {
-            if (sctpStreamsCount >= 8) return 2048 * 1024;
-            if (sctpStreamsCount >= 4) return 1024 * 1024;
-            if (sctpStreamsCount >= 2) return 512 * 1024;
-            return 256 * 1024;
-        }
-
-        window.selectSctpStreams = (count) => {
-            const parsed = parseInt(count, 10) || 4;
-            sctpStreamsCount = parsed;
-            localStorage.setItem('webdrop_sctp_streams', parsed.toString());
-            updateParallelSctpUI();
-            showToast(`Configured ${parsed}x Turbo SCTP stream pipeline`, 'success');
-        };
-
-        function setupSCTPLanes(peerRecord) {
-            if (!peerRecord) return;
-            peerRecord.parallelChannels = [ peerRecord.conn ];
-        }
 
         function setupVisibilityHandler() {
             document.addEventListener('visibilitychange', () => {
@@ -2158,8 +1991,7 @@
                 conn: connection,
                 name: deviceName,
                 iconInfo: styleInfo,
-                e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false },
-                parallelChannels: [ connection ]
+                e2ee: { ready: false, key: null, numbers: '----', emojis: '----', verified: false }
             };
 
             meshPeers.set(peerId, peerRecord);
@@ -2323,9 +2155,16 @@
             requestWakeLock();
             isTransferring = true;
             const file = fileQueue.shift();
-            const fileId = `${file.name}_${file.size}_${file.lastModified}`;
             
-            transferState = { role: 'sender', file: file, fileId: fileId, offset: 0, acksReceived: 0, targetCount: targets.length };
+            transferState = { 
+                role: 'sender', 
+                file: file, 
+                offset: 0, 
+                reader: new FileReader(),
+                targets: targets,
+                targetAcks: new Set(),
+                isSendingChunk: false
+            };
             initTransferMetrics(file.size);
             showTransferUI('sender', file.name, fileQueue.length);
 
@@ -2334,7 +2173,6 @@
                     t.conn.send(JSON.stringify({ 
                         type: 'meta', 
                         senderName: getSavedDeviceName(),
-                        fileId: fileId,
                         name: file.name, 
                         size: file.size, 
                         mime: file.type || 'application/octet-stream' 
@@ -2343,107 +2181,36 @@
             });
         }
 
-        async function streamChunks(file, startOffset = 0) {
-            const targets = getTargetPeers();
-            transferState.offset = startOffset;
-            initTransferMetrics(file.size);
-            metrics.lastSampleBytes = startOffset;
-            updateTransferMetrics(transferState.offset, file.size);
+        function sendNextChunk() {
+            const state = transferState;
+            if (!state || state.role !== 'sender' || !isTransferring) return;
 
-            const highWaterMark = getDynamicHighWaterMark();
-
-            while (transferState.offset < file.size && isTransferring && targets.some(t => t.conn && t.conn.open)) {
-                // Backpressure flow control: if any target has buffer saturated, pause briefly
-                let needsBackpressureWait = false;
-                for (const t of targets) {
+            if (state.offset >= state.file.size) {
+                state.targets.forEach(t => {
                     if (t.conn && t.conn.open) {
-                        const buf = t.conn.dataChannel?.bufferedAmount ?? t.conn.bufferedAmount ?? 0;
-                        if (buf > highWaterMark) {
-                            needsBackpressureWait = true;
-                            break;
-                        }
+                        t.conn.send(JSON.stringify({ type: 'eof' }));
                     }
-                }
-                if (needsBackpressureWait) {
-                    await new Promise(resolve => setTimeout(resolve, 15));
-                    if (!isTransferring) return;
-                    continue;
-                }
-
-                const slice = file.slice(transferState.offset, transferState.offset + CHUNK_SIZE);
-                const rawBuffer = await slice.arrayBuffer();
-                if (!isTransferring) return;
-
-                const chunkIndex = Math.floor(transferState.offset / CHUNK_SIZE);
-
-                for (const t of targets) {
-                    if (!t.conn || !t.conn.open) continue;
-                    const bestChannel = t.conn;
-
-                    if (t.e2ee?.ready && t.e2ee.key) {
-                        try {
-                            const iv = window.crypto.getRandomValues(new Uint8Array(12));
-                            const ciphertext = await window.crypto.subtle.encrypt(
-                                { name: "AES-GCM", iv: iv },
-                                t.e2ee.key,
-                                rawBuffer
-                            );
-                            // Packet structure: [ 0xEF (1) | chunkIndex uint32 (4) | IV (12) | ciphertext ]
-                            const packet = new Uint8Array(17 + ciphertext.byteLength);
-                            packet[0] = 0xEF;
-                            const dv = new DataView(packet.buffer);
-                            dv.setUint32(1, chunkIndex, false);
-                            packet.set(iv, 5);
-                            packet.set(new Uint8Array(ciphertext), 17);
-                            bestChannel.send(packet.buffer);
-                        } catch(err) {
-                            // Fallback plain sequenced packet
-                            const packet = new Uint8Array(5 + rawBuffer.byteLength);
-                            packet[0] = 0xD0;
-                            const dv = new DataView(packet.buffer);
-                            dv.setUint32(1, chunkIndex, false);
-                            packet.set(new Uint8Array(rawBuffer), 5);
-                            bestChannel.send(packet.buffer);
-                        }
-                    } else {
-                        // Plain sequenced packet: [ 0xD0 (1) | chunkIndex uint32 (4) | rawBuffer ]
-                        const packet = new Uint8Array(5 + rawBuffer.byteLength);
-                        packet[0] = 0xD0;
-                        const dv = new DataView(packet.buffer);
-                        dv.setUint32(1, chunkIndex, false);
-                        packet.set(new Uint8Array(rawBuffer), 5);
-                        bestChannel.send(packet.buffer);
-                    }
-                }
-
-                transferState.offset += rawBuffer.byteLength;
-                updateTransferMetrics(transferState.offset, file.size);
+                });
+                updateTransferMetrics(state.file.size, state.file.size);
+                setTimeout(processNextFile, 500);
+                return;
             }
 
-            if (transferState.offset >= file.size && isTransferring) {
-                // Wait for all channels across all targets to drain before sending EOF
-                const waitForDrain = () => {
-                    if (!isTransferring) return;
-                    let maxBuffered = 0;
-                    targets.forEach(t => {
-                        if (t.conn && t.conn.open) {
-                            const buf = t.conn.dataChannel?.bufferedAmount ?? t.conn.bufferedAmount ?? 0;
-                            if (buf > maxBuffered) maxBuffered = buf;
-                        }
-                    });
-                    if (maxBuffered > 0) {
-                        setTimeout(waitForDrain, 25);
-                    } else {
-                        updateTransferMetrics(file.size, file.size);
-                        targets.forEach(t => {
-                            if (t.conn && t.conn.open) {
-                                t.conn.send(JSON.stringify({ type: 'eof' }));
-                            }
-                        });
+            state.isSendingChunk = true;
+            const slice = state.file.slice(state.offset, state.offset + CHUNK_SIZE);
+            state.reader.onload = (e) => {
+                if (!isTransferring || state.role !== 'sender') return;
+                const buffer = e.target.result;
+                state.targets.forEach(t => {
+                    if (t.conn && t.conn.open) {
+                        t.conn.send(buffer);
                     }
-                };
-                waitForDrain();
-            }
+                });
+                state.offset += slice.size;
+                updateTransferMetrics(state.offset, state.file.size);
+                state.isSendingChunk = false;
+            };
+            state.reader.readAsArrayBuffer(slice);
         }
 
         async function handleIncomingData(data, senderPeerId) {
@@ -2459,32 +2226,38 @@
                 } else if (msg.type === 'meta') {
                     requestWakeLock();
                     isTransferring = true;
-
                     transferState = { 
                         role: 'receiver', 
                         receivedBuffers: [], 
-                        receivedChunks: {},
-                        receivedChunkIndices: new Set(),
                         receivedBytes: 0, 
                         meta: msg,
                         senderPeerId: senderPeerId,
                         senderName: msg.senderName || peerRecord?.name || 'Peer',
-                        eofReceived: false,
-                        eofTimeout: null,
                         isAssembling: false
                     };
 
                     initTransferMetrics(msg.size);
                     showTransferUI('receiver', msg.name, 0);
-                    updateTransferMetrics(0, msg.size);
-                    peerRecord?.conn?.send(JSON.stringify({ type: 'ready', resumeOffset: 0 }));
+                    peerRecord?.conn?.send(JSON.stringify({ type: 'ack' }));
 
-                } else if (msg.type === 'ready') {
-                    if (transferState.role === 'sender' && transferState.file) {
-                        streamChunks(transferState.file, 0);
+                } else if (msg.type === 'ack') {
+                    if (transferState && transferState.role === 'sender') {
+                        transferState.targetAcks.add(senderPeerId);
+                        const openTargets = transferState.targets.filter(t => t.conn && t.conn.open);
+                        if (openTargets.length === 0) {
+                            await handleTransferCancelled('All target connections closed.');
+                            return;
+                        }
+                        const allAcked = openTargets.every(t => transferState.targetAcks.has(t.id));
+                        if (allAcked || transferState.targetAcks.size >= openTargets.length) {
+                            transferState.targetAcks.clear();
+                            sendNextChunk();
+                        }
                     }
+                } else if (msg.type === 'eof') {
+                    assembleAndDownloadReceivedFile();
                 } else if (msg.type === 'cancel') {
-                    await handleTransferCancelled('Transfer was cancelled by peer.', true);
+                    await handleTransferCancelled('Transfer was cancelled by peer.');
                 } else if (msg.type === 'text_snippet') {
                     addTextToHistory(msg.text, 'received', msg.senderName || peerRecord?.name);
                     showToast(`Received text snippet from ${msg.senderName || 'peer'}!`, 'info');
@@ -2516,216 +2289,56 @@
                 } else if (msg.type === 'screencast_stopped') {
                     window.closeScreencastModal();
                     showToast('Screen cast presentation ended', 'info');
-                } else if (msg.type === 'eof') {
-                    const state = transferState;
-                    state.eofReceived = true;
-                    const totalExpected = Math.ceil((state.meta?.size || 0) / CHUNK_SIZE);
-                    const receivedCount = state.receivedChunkIndices ? state.receivedChunkIndices.size : 0;
-                    if (receivedCount >= totalExpected || state.receivedBytes >= (state.meta?.size || 0)) {
-                        await assembleAndDownloadReceivedFile();
-                        peerRecord?.conn?.send(JSON.stringify({ type: 'eof_ack' }));
-                    } else {
-                        if (state.eofTimeout) clearTimeout(state.eofTimeout);
-                        state.eofTimeout = setTimeout(async () => {
-                            if (isTransferring && state.role === 'receiver') {
-                                await assembleAndDownloadReceivedFile();
-                                peerRecord?.conn?.send(JSON.stringify({ type: 'eof_ack' }));
-                            }
-                        }, 2500);
-                    }
-                } else if (msg.type === 'eof_ack') {
-                    transferState.acksReceived = (transferState.acksReceived || 0) + 1;
-                    if (transferState.acksReceived >= (transferState.targetCount || 1)) {
-                        updateTransferMetrics(transferState.file?.size || 0, transferState.file?.size || 0);
-                        setTimeout(() => { processNextFile(); }, 350);
-                    }
                 }
             } else {
-                // Incoming binary chunk
+                // Incoming binary chunk (ArrayBuffer)
                 const state = transferState;
-                if (!state.meta || !isTransferring) return;
+                if (!state || !state.meta || state.role !== 'receiver') return;
 
-                const rawBytes = (data instanceof Uint8Array) ? data : new Uint8Array(data);
-                let chunkIndex = 0;
-                let chunkData = null;
-
-                if (rawBytes[0] === 0xEF && rawBytes.byteLength > 17) {
-                    // Sequenced E2EE chunk: [ 0xEF (1) | chunkIndex (4) | IV (12) | ciphertext ]
-                    const dv = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
-                    chunkIndex = dv.getUint32(1, false);
-                    const iv = rawBytes.slice(5, 17);
-                    const ciphertext = rawBytes.slice(17);
-
-                    if (!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) {
-                        let waitMs = 0;
-                        while ((!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) && waitMs < 2000) {
-                            await new Promise(r => setTimeout(r, 50));
-                            waitMs += 50;
-                        }
-                    }
-
-                    if (peerRecord?.e2ee?.ready && peerRecord?.e2ee?.key) {
-                        try {
-                            chunkData = await window.crypto.subtle.decrypt(
-                                { name: "AES-GCM", iv: iv },
-                                peerRecord.e2ee.key,
-                                ciphertext
-                            );
-                        } catch(e) {
-                            console.error('Failed to decrypt sequenced chunk:', e);
-                            return;
-                        }
-                    } else {
-                        console.error('E2EE key not available for chunk', chunkIndex);
-                        return;
-                    }
-                } else if (rawBytes[0] === 0xD0 && rawBytes.byteLength >= 5) {
-                    // Sequenced Plain chunk: [ 0xD0 (1) | chunkIndex (4) | payload ]
-                    const dv = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
-                    chunkIndex = dv.getUint32(1, false);
-                    if (data instanceof ArrayBuffer) {
-                        chunkData = data.slice(5);
-                    } else if (ArrayBuffer.isView(data)) {
-                        chunkData = data.buffer.slice(data.byteOffset + 5, data.byteOffset + data.byteLength);
-                    } else {
-                        chunkData = rawBytes.slice(5).buffer;
-                    }
-                } else if (rawBytes[0] === 0xEE && rawBytes.byteLength > 13) {
-                    // Legacy un-sequenced E2EE chunk: [ 0xEE (1) | IV (12) | ciphertext ]
-                    chunkIndex = state.nextLegacyIdx || 0;
-                    state.nextLegacyIdx = chunkIndex + 1;
-                    const iv = rawBytes.slice(1, 13);
-                    const ciphertext = rawBytes.slice(13);
-                    if (!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) {
-                        let waitMs = 0;
-                        while ((!peerRecord?.e2ee?.ready || !peerRecord?.e2ee?.key) && waitMs < 2000) {
-                            await new Promise(r => setTimeout(r, 50));
-                            waitMs += 50;
-                        }
-                    }
-                    if (peerRecord?.e2ee?.ready && peerRecord?.e2ee?.key) {
-                        try {
-                            chunkData = await window.crypto.subtle.decrypt(
-                                { name: "AES-GCM", iv: iv },
-                                peerRecord.e2ee.key,
-                                ciphertext
-                            );
-                        } catch(e) {
-                            console.error('Failed to decrypt legacy chunk:', e);
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                } else {
-                    // Legacy un-sequenced Plain chunk
-                    chunkIndex = state.nextLegacyIdx || 0;
-                    state.nextLegacyIdx = chunkIndex + 1;
-                    chunkData = data;
-                }
-
-                if (!chunkData) return;
-
-                // De-duplicate if chunk arrived twice
-                if (!state.receivedChunkIndices) state.receivedChunkIndices = new Set();
-                if (state.receivedChunkIndices.has(chunkIndex)) return;
-                state.receivedChunkIndices.add(chunkIndex);
-
-                // Always index in memory by chunk sequence
-                if (!state.receivedChunks) state.receivedChunks = {};
-                state.receivedChunks[chunkIndex] = chunkData;
-
-                state.receivedBytes += (chunkData.byteLength || 0);
+                state.receivedBuffers.push(data);
+                state.receivedBytes += (data.byteLength || 0);
                 updateTransferMetrics(state.receivedBytes, state.meta.size);
-
-                // Check if EOF was already signaled and this arrived chunk completes the file
-                if (state.eofReceived) {
-                    const totalExpected = Math.ceil((state.meta?.size || 0) / CHUNK_SIZE);
-                    const receivedCount = state.receivedChunkIndices ? state.receivedChunkIndices.size : 0;
-                    if (receivedCount >= totalExpected || state.receivedBytes >= (state.meta?.size || 0)) {
-                        if (state.eofTimeout) clearTimeout(state.eofTimeout);
-                        await assembleAndDownloadReceivedFile();
-                        peerRecord?.conn?.send(JSON.stringify({ type: 'eof_ack' }));
-                    }
-                }
+                peerRecord?.conn?.send(JSON.stringify({ type: 'ack' }));
             }
         }
 
         window.cancelTransfer = async () => {
             if (!isTransferring) return;
-            if (transferState.meta?.fileId) clearCheckpoint(transferState.meta.fileId);
-            if (transferState.fileId) clearCheckpoint(transferState.fileId);
             getTargetPeers().forEach(t => {
                 if (t.conn && t.conn.open) t.conn.send(JSON.stringify({ type: 'cancel' }));
             });
-            await handleTransferCancelled('You cancelled the transfer.', true);
+            await handleTransferCancelled('You cancelled the transfer.');
         };
 
-        async function handleTransferCancelled(reason, shouldClearCheckpoint = false) {
+        async function handleTransferCancelled(reason) {
             isTransferring = false;
-            
-            if (shouldClearCheckpoint && transferState.meta?.fileId) {
-                clearCheckpoint(transferState.meta.fileId);
-            }
-
-            transferState = { role: null, file: null, fileId: null, offset: 0, receivedBuffers: [], receivedChunks: {}, receivedChunkIndices: new Set(), receivedBytes: 0, meta: null };
+            transferState = { role: null, file: null, offset: 0, reader: null, receivedBuffers: [], receivedBytes: 0, meta: null, senderPeerId: null, targets: [], targetAcks: new Set(), isSendingChunk: false, isAssembling: false };
             document.getElementById('transfer-overlay').classList.add('hidden');
             releaseWakeLock();
             showToast(reason, 'warn');
         }
 
-        async function assembleAndDownloadReceivedFile() {
+        function assembleAndDownloadReceivedFile() {
             const state = transferState;
-            if (state.isAssembling) return;
+            if (!state || state.isAssembling) return;
             state.isAssembling = true;
-            if (state.eofTimeout) clearTimeout(state.eofTimeout);
             isTransferring = false;
-            let fileOrBlob = null;
 
-            if (state.meta?.fileId) {
-                clearCheckpoint(state.meta.fileId);
-            }
-
-            // Assemble file from ordered in-memory chunks
-            const chunksObj = state.receivedChunks || {};
-            const totalChunks = Math.ceil((state.meta?.size || 0) / CHUNK_SIZE);
-            const orderedBuffers = [];
-            for (let i = 0; i < totalChunks; i++) {
-                if (chunksObj[i]) {
-                    orderedBuffers.push(chunksObj[i]);
-                }
-            }
-
-            if (orderedBuffers.length > 0) {
-                fileOrBlob = new Blob(orderedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
-            } else if (state.receivedBuffers && state.receivedBuffers.length > 0) {
-                fileOrBlob = new Blob(state.receivedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
-            } else if (state.meta?.size === 0) {
-                fileOrBlob = new Blob([], { type: state.meta?.mime || 'application/octet-stream' });
-            }
-
-            if (!fileOrBlob || (fileOrBlob.size === 0 && (state.meta?.size || 0) > 0)) {
-                console.error('Assembled file is empty or missing chunks');
-                showToast('Failed to assemble received file.', 'error');
-                document.getElementById('transfer-overlay').classList.add('hidden');
-                releaseWakeLock();
-                return;
-            }
-
-            addFileToHistory(fileOrBlob, state.meta?.name || 'download', state.meta?.size || fileOrBlob.size, state.senderName);
-            updateTransferMetrics(state.meta?.size || 0, state.meta?.size || 0);
+            const blob = new Blob(state.receivedBuffers, { type: state.meta?.mime || 'application/octet-stream' });
+            addFileToHistory(blob, state.meta?.name || 'download', state.meta?.size || blob.size, state.senderName);
+            updateTransferMetrics(state.meta?.size || blob.size, state.meta?.size || blob.size);
             
             setTimeout(() => {
                 document.getElementById('transfer-overlay').classList.add('hidden');
                 releaseWakeLock();
-            }, 600);
+            }, 500);
         }
 
         function showTransferUI(role, filename, queueLeft) {
             const overlay = document.getElementById('transfer-overlay');
             overlay.classList.remove('hidden');
             document.getElementById('transfer-filename').innerText = filename;
-            document.getElementById('transfer-title').innerText = role === 'sender' ? 'Sending' : 'Receiving';
+            document.getElementById('transfer-title').innerText = role === 'sender' ? 'Sending File' : 'Receiving File';
             
             const icon = document.getElementById('transfer-icon');
             if(role === 'sender') {
@@ -2740,17 +2353,6 @@
                 qEl.innerText = `Queue: ${queueLeft} remaining`; 
             } else { 
                 qEl.classList.add('hidden'); 
-            }
-
-            const sctpBadge = document.getElementById('transfer-sctp-badge');
-            const sctpText = document.getElementById('transfer-sctp-text');
-            if (sctpBadge && sctpText) {
-                if (sctpStreamsCount > 1) {
-                    sctpBadge.classList.remove('hidden');
-                    sctpText.innerText = `${sctpStreamsCount}x Parallel SCTP Active`;
-                } else {
-                    sctpBadge.classList.add('hidden');
-                }
             }
             
             updateTransferMetrics(0, transferState.file?.size || transferState.meta?.size || 1);

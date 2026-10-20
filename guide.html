@@ -158,8 +158,8 @@
                             Drag-and-drop or browse files (photos, 4K videos, zip files, folders, or docs) or paste text snippets. Files transfer directly device-to-device at full Wi-Fi speed!
                         </p>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-white/5 text-[11px] text-amber-400 font-mono">
-                        4x Turbo SCTP streaming enabled
+                    <div class="mt-4 pt-3 border-t border-white/5 text-[11px] text-blue-400 font-mono">
+                        Fast flow-controlled P2P transfer
                     </div>
                 </div>
             </div>
@@ -399,15 +399,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 
-                <!-- Parallel SCTP -->
+                <!-- Flow-Controlled P2P Streaming -->
                 <div class="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-2">
-                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                        <i class="ph-bold ph-lightning text-base"></i> Multi-Channel Parallel SCTP Turbo
+                    <div class="flex items-center gap-2 text-blue-400 font-bold text-sm">
+                        <i class="ph-bold ph-lightning text-base"></i> Reliable Flow-Controlled P2P Transfer
                     </div>
                     <p class="text-zinc-400 leading-relaxed">
-                        WebRTC is typically limited to a single sequential queue. WebDrop opens parallel SCTP data lanes with pipelined dynamic watermarking (256KB &ndash; 2048KB) to saturate gigabit Wi-Fi 6, 2.5Gbps, and 10Gbps fiber connections.
+                        WebDrop employs sequential 256 KB chunk slicing with Stop-and-Wait ACK flow control directly over WebRTC DataChannels. This prevents buffer overflows, guarantees exact byte ordering, and eliminates dropped packets.
                     </p>
-                    <p class="text-zinc-500">Configure 1x, 2x, 4x (Recommended), or 8x streams from the lightning pill in the header.</p>
+                    <p class="text-zinc-500">100% resilient across all desktop and mobile browsers with zero cloud relays.</p>
                 </div>
 
                 <!-- Screen Casting -->
