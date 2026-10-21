@@ -85,7 +85,7 @@
                 Getting Started with <span class="gradient-text">WebDrop</span>
             </h1>
             <p class="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-2xl">
-                Learn how to beam unlimited files across your phones, tablets, laptops, and desktops, install WebDrop as a high-performance Progressive Web App (PWA), and integrate directly with the native Apple Share Sheet.
+                Learn how to beam unlimited files across your phones, tablets, laptops, and desktops, install WebDrop as a high-performance Progressive Web App (PWA), and master fast iPadOS and iOS sharing workflows.
             </p>
 
             <!-- Quick Navigation Jump Pills -->
@@ -94,7 +94,7 @@
                     <i class="ph-bold ph-lightning text-amber-400"></i> Quick Start
                 </a>
                 <a href="#apple-share" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 border-blue-500/30 text-blue-300">
-                    <i class="ph-fill ph-apple-logo text-blue-400"></i> Apple Share Menu
+                    <i class="ph-fill ph-apple-logo text-blue-400"></i> Apple & Mobile Sharing
                 </a>
                 <a href="#pwa-install" class="glass-btn text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                     <i class="ph-bold ph-download-simple text-purple-400"></i> PWA Installation
@@ -165,7 +165,7 @@
             </div>
         </section>
 
-        <!-- ================= SECTION 2: APPLE SHARE MENU ================= -->
+        <!-- ================= SECTION 2: APPLE & MOBILE SHARING ================= -->
         <section id="apple-share" class="glass-panel p-6 sm:p-10 space-y-6 border-blue-500/20 bg-blue-500/[0.03]">
             <div class="flex items-center gap-3 border-b border-white/10 pb-4">
                 <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/20">
@@ -173,81 +173,103 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight">2. Native Apple Share Menu Integration</h2>
-                        <span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full uppercase border border-blue-500/30">iOS AirDrop Alternative</span>
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight">2. iPadOS & iOS Sharing Workflows</h2>
+                        <span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full uppercase border border-blue-500/30">Cross-Platform AirDrop</span>
                     </div>
-                    <p class="text-xs sm:text-sm text-zinc-400">Share photos, videos, and files directly from Apple Photos and the Files app into WebDrop.</p>
+                    <p class="text-xs sm:text-sm text-zinc-400">Transfer photos, 4K videos, documents, and folders effortlessly from your iPad and iPhone to any device.</p>
                 </div>
             </div>
 
-            <!-- How It Works Callout -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-sm space-y-2">
-                <div class="flex items-center gap-2 text-blue-300 font-semibold">
-                    <i class="ph-bold ph-info text-base"></i> How the Apple Share Sheet Integration Works
+            <!-- Apple Platform Limitation Notice -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-sm space-y-2">
+                <div class="flex items-center gap-2 text-amber-300 font-semibold">
+                    <i class="ph-bold ph-info text-base"></i> Why don't PWAs show in the native iPad/iPhone Share Sheet app row?
                 </div>
                 <p class="text-xs text-zinc-300 leading-relaxed">
-                    By installing WebDrop to your iPhone or iPad Home Screen via Safari, WebDrop registers as a native system <strong>Web Share Target</strong>. When you tap the native Apple Share button (<i class="ph-bold ph-export"></i> / <i class="ph-bold ph-share"></i>) in <strong class="text-white">Photos</strong>, <strong class="text-white">Files</strong>, or Safari, <strong class="text-white">WebDrop appears directly alongside AirDrop and Messages</strong>!
+                    Unlike <strong>Android</strong> (which supports the W3C Web Share Target API and registers PWAs directly into the OS share menu), <strong>Apple has not implemented the Web Share Target API in iOS or iPadOS</strong>. Apple strictly restricts the native Share Sheet app row exclusively to native App Store binaries compiled with Xcode.
+                </p>
+                <p class="text-xs text-amber-200/90 leading-relaxed">
+                    Even though Apple restricts PWAs from the Share Sheet app row, iPadOS and iOS support <strong>four faster, seamless native workflows</strong> built right into WebDrop:
                 </p>
             </div>
 
-            <!-- Visual Step Walkthrough -->
+            <!-- Visual Step Walkthrough for iOS / iPadOS -->
             <div class="space-y-4">
                 <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-                    <i class="ph-bold ph-steps text-blue-400"></i> Step-by-Step Setup & Usage (iOS & iPadOS)
+                    <i class="ph-bold ph-lightning text-blue-400"></i> 4 Native iPad & iPhone Sharing Workflows
                 </h3>
 
-                <div class="space-y-3">
-                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</div>
-                        <div class="space-y-1">
-                            <p class="font-semibold text-white text-sm">Install WebDrop to your Home Screen (Required)</p>
-                            <p class="text-xs text-zinc-400 leading-relaxed">
-                                Open WebDrop in <strong class="text-white">Safari</strong>, tap the Share icon (<i class="ph-bold ph-export text-blue-400"></i>), scroll down and tap <strong class="text-white">"Add to Home Screen"</strong>. <em>(Apple requires WebDrop to be on the Home Screen for system-level Share Sheet access.)</em>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</div>
-                        <div class="space-y-1">
-                            <p class="font-semibold text-white text-sm">Launch WebDrop from your Home Screen once</p>
-                            <p class="text-xs text-zinc-400 leading-relaxed">
-                                Tap the new WebDrop icon on your Home Screen to launch it in standalone app mode. This registers the Service Worker and file receiver with iOS.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</div>
-                        <div class="space-y-1">
-                            <p class="font-semibold text-white text-sm">Select any Photo, Video, or Document in iOS</p>
-                            <p class="text-xs text-zinc-400 leading-relaxed">
-                                Open Apple <strong class="text-white">Photos</strong>, the <strong class="text-white">Files</strong> app, or any third-party app. Select the items you wish to send and tap the native iOS <strong class="text-white">Share button</strong>.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</div>
-                        <div class="space-y-1">
-                            <p class="font-semibold text-white text-sm">Tap "WebDrop" in the Share Sheet App Row</p>
-                            <p class="text-xs text-zinc-400 leading-relaxed">
-                                Swipe through the app row (AirDrop, Messages, Mail) and tap <strong class="text-white">WebDrop</strong>.
-                            </p>
-                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 mt-2">
-                                <strong>Tip if WebDrop doesn't appear:</strong> Swipe to the end of the app icons, tap <strong class="text-white">More (...)</strong>, tap <strong class="text-white">Edit</strong> in the top right, and tap the green <strong>(+)</strong> next to WebDrop to add it to your Favorites.
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Workflow 1: Split View Drag & Drop -->
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">1</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">iPad Split View & Slide Over (Fastest!)</h4>
+                                <span class="text-[10px] text-blue-400 uppercase font-semibold">Native Drag & Drop</span>
                             </div>
                         </div>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            On your iPad, open WebDrop. Swipe up from the bottom edge to reveal the iPad Dock, then drag <strong class="text-white">Photos</strong> or <strong class="text-white">Files</strong> into <strong class="text-white">Split View</strong> (side-by-side) or <strong class="text-white">Slide Over</strong>.
+                        </p>
+                        <div class="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-200">
+                            <strong>Action:</strong> Select any batch of photos, videos, or folders in Photos/Files and drag them straight across into WebDrop's drop zone.
+                        </div>
                     </div>
 
-                    <div class="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</div>
-                        <div class="space-y-1">
-                            <p class="font-semibold text-white text-sm">Auto-Queue & Beam Instantly</p>
-                            <p class="text-xs text-zinc-400 leading-relaxed">
-                                WebDrop opens automatically with a blue banner: <strong class="text-blue-300">"Files Queued from Share Sheet"</strong>. Simply connect to your target device (Android, Mac, PC, Linux) and your files beam across without any intermediary server!
-                            </p>
+                    <!-- Workflow 2: In-App Native Picker -->
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0">2</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Native Photo Library & File Picker</h4>
+                                <span class="text-[10px] text-emerald-400 uppercase font-semibold">Tap to Browse</span>
+                            </div>
                         </div>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            Inside WebDrop, tap <strong class="text-white">"Browse Files"</strong> or anywhere inside the dashed drop zone. iPadOS/iOS immediately opens Apple's system picker:
+                        </p>
+                        <ul class="text-[11px] text-zinc-300 space-y-1 pl-2">
+                            <li>&bull; <strong class="text-white">Photo Library:</strong> Multi-select photos, 4K videos, and albums.</li>
+                            <li>&bull; <strong class="text-white">Choose Files:</strong> Browse iCloud Drive, On My iPad, USB drives, & Downloads.</li>
+                            <li>&bull; <strong class="text-white">Take Photo:</strong> Capture live photos/video directly into the queue.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Workflow 3: Clipboard Copy & Paste -->
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center shrink-0">3</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Clipboard Copy & Paste</h4>
+                                <span class="text-[10px] text-purple-400 uppercase font-semibold">Command+V / Tap to Paste</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            In Apple Photos or Files, tap Share &rarr; <strong class="text-white">Copy</strong> (or press <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌘C</kbd> with an iPad keyboard). Switch to WebDrop and press <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌘V</kbd> or tap <strong class="text-white">"Paste Clipboard"</strong>.
+                        </p>
+                        <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-200">
+                            WebDrop automatically detects copied photos, files, and text snippets directly from system clipboard memory!
+                        </div>
+                    </div>
+
+                    <!-- Workflow 4: Apple Shortcut Action -->
+                    <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-pink-500/20 text-pink-400 font-bold text-xs flex items-center justify-center shrink-0">4</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Apple Shortcuts Share Sheet Bridge</h4>
+                                <span class="text-[10px] text-pink-400 uppercase font-semibold">Custom Share Sheet Action</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            While Apple doesn't allow PWAs in the top app row, Apple <strong class="text-white">Shortcuts</strong> DO appear in the Share Sheet action list below:
+                        </p>
+                        <ol class="text-[11px] text-zinc-300 space-y-1 pl-1 list-decimal list-inside">
+                            <li>Open the Apple <strong class="text-white">Shortcuts</strong> app and create a new Shortcut.</li>
+                            <li>Enable <strong class="text-white">"Show in Share Sheet"</strong> in Shortcut Details.</li>
+                            <li>Add the action <strong class="text-white">"Copy to Clipboard"</strong>, followed by <strong class="text-white">"Open App: WebDrop"</strong>.</li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -267,7 +289,7 @@
                         <tbody class="divide-y divide-white/5 text-zinc-400">
                             <tr>
                                 <td class="p-3 font-medium text-white">Cross-Platform</td>
-                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> iOS, Android, Mac, Windows, Linux</td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> iOS, iPadOS, Android, Mac, Windows, Linux</td>
                                 <td class="p-3 text-red-400"><i class="ph-bold ph-x"></i> Apple Devices Only</td>
                             </tr>
                             <tr>
@@ -281,9 +303,12 @@
                                 <td class="p-3 text-red-400"><i class="ph-bold ph-x"></i> 1-to-1 Only</td>
                             </tr>
                             <tr>
-                                <td class="p-3 font-medium text-white">Native Apple Share Sheet</td>
-                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Supported via PWA</td>
-                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Native System</td>
+                                <td class="p-3 font-medium text-white">Native System Share Sheet</td>
+                                <td class="p-3 text-zinc-300 font-medium">
+                                    <span class="text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Android:</span> Full Share Sheet (PWA)<br>
+                                    <span class="text-blue-400 font-semibold"><i class="ph-bold ph-check"></i> iPadOS / iOS:</span> Split View Drag & Drop / Native Pickers
+                                </td>
+                                <td class="p-3 text-emerald-400 font-semibold"><i class="ph-bold ph-check"></i> Native Apple Share Sheet</td>
                             </tr>
                         </tbody>
                     </table>
@@ -462,10 +487,13 @@
                 
                 <div class="bg-black/30 border border-white/5 rounded-2xl p-4 space-y-1.5">
                     <h4 class="font-bold text-white flex items-center gap-2">
-                        <i class="ph-bold ph-caret-right text-blue-400"></i> Why don't I see WebDrop in my iPhone's Share Sheet?
+                        <i class="ph-bold ph-caret-right text-blue-400"></i> Why don't I see WebDrop in the Share Sheet on my iPad or iPhone?
                     </h4>
                     <p class="text-zinc-400 leading-relaxed pl-5">
-                        Apple's WebKit requires WebDrop to be added to your Home Screen via Safari (<strong class="text-white">Share &rarr; Add to Home Screen</strong>). Once added, tap the WebDrop icon on your Home Screen to launch it once. It will then appear in the native iOS Share Sheet across all apps.
+                        Apple's iOS and iPadOS operating systems do not support the W3C Web Share Target API for Progressive Web Apps (PWAs). Apple strictly restricts the native Share Sheet app row exclusively to native App Store binaries compiled with Xcode. On Android, installed PWAs automatically register as native share targets, but Apple has not yet enabled this for WebKit on iOS/iPadOS.
+                    </p>
+                    <p class="text-zinc-400 leading-relaxed pl-5">
+                        <strong class="text-white">Best iPad workflow:</strong> Use <strong class="text-blue-400">iPadOS Split View or Slide Over</strong>! Swipe up from the bottom of your iPad screen to open Photos or Files side-by-side with WebDrop, and drag files directly into the WebDrop drop zone. You can also tap <strong class="text-white">"Browse Files"</strong> in WebDrop to open the native Apple Photo Library and Files picker, or use Apple Shortcuts as a custom action.
                     </p>
                 </div>
 

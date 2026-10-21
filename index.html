@@ -939,7 +939,14 @@
                 // Ignore if not present
             }
 
-            if (window.location.search.includes('shared=true')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('text')) {
+                handleIncomingSharedText(urlParams.get('text'));
+            } else if (urlParams.has('url')) {
+                handleIncomingSharedText(urlParams.get('url'));
+            }
+
+            if (window.location.search.includes('shared=true') || urlParams.has('text') || urlParams.has('url')) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -1003,6 +1010,9 @@
                 pendingSharedFiles = [];
                 updatePendingShareBanner();
                 showToast('Auto-beaming files queued from Share Sheet!', 'success');
+            }
+            if (fileQueue.length > 0 && !isTransferring) {
+                processNextFile();
             }
             if (pendingSharedText) {
                 window.switchActiveTab('text');
@@ -2067,22 +2077,49 @@
             });
             ['dragenter', 'dragover'].forEach(eventName => {
                 dropZone.addEventListener(eventName, () => {
-                    if (meshPeers.size > 0) dropZone.classList.add('drag-active');
+                    dropZone.classList.add('drag-active');
                 }, false);
             });
             ['dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false);
             });
             dropZone.addEventListener('drop', (e) => {
-                if (meshPeers.size > 0 && e.dataTransfer.files.length > 0) {
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                     enqueueFiles(Array.from(e.dataTransfer.files));
                 }
             }, false);
         }
 
+        window.addEventListener('paste', (e) => {
+            const activeEl = document.activeElement;
+            const isTextInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+            if (e.clipboardData) {
+                if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+                    e.preventDefault();
+                    enqueueFiles(Array.from(e.clipboardData.files));
+                    showToast(`Pasted ${e.clipboardData.files.length} file(s) from clipboard!`, 'success');
+                    return;
+                }
+                if (!isTextInput && e.clipboardData.types.includes('text/plain')) {
+                    const text = e.clipboardData.getData('text/plain');
+                    if (text && text.trim()) {
+                        e.preventDefault();
+                        handleIncomingSharedText(text.trim());
+                        showToast('Pasted text from clipboard into Beam!', 'info');
+                    }
+                }
+            }
+        });
+
         function enqueueFiles(files) {
             fileQueue.push(...files);
-            if (!isTransferring) processNextFile();
+            const targets = getTargetPeers();
+            if (targets.length > 0) {
+                if (!isTransferring) processNextFile();
+            } else {
+                showToast(`Queued ${files.length} file(s). Connect a device to beam!`, 'info');
+            }
         }
 
         function initTransferMetrics(totalBytes) {
